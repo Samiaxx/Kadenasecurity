@@ -1,16 +1,6 @@
 const chainSummary = document.getElementById('chainSummary');
-const timelineRange = document.getElementById('timelineRange');
-const timelineLabel = document.getElementById('timelineLabel');
-const playBtn = document.getElementById('playBtn');
 
 let graphView = null;
-let timelineState = {
-  min: 0,
-  max: 0,
-  step: 0,
-  playing: false,
-  timer: null
-};
 
 function riskColor(score) {
   if (score >= 75) return '#ff5c5c';
@@ -207,105 +197,6 @@ async function loadCase() {
 
   renderGraph(record.graphSnapshot);
   renderChainSummary(record.chainSummary);
-  initTimeline(record.graphSnapshot);
 }
 
 loadCase();
-
-function initTimeline(graph) {
-  if (!timelineRange || !timelineLabel || !playBtn) {
-    return;
-  }
-  if (!graph.edges || graph.edges.length === 0) {
-    timelineRange.disabled = true;
-    playBtn.disabled = true;
-    timelineLabel.textContent = '--';
-    return;
-  }
-  const times = graph.edges.map((edge) => new Date(edge.timestamp).getTime());
-  const min = Math.min(...times);
-  const max = Math.max(...times);
-  const span = Math.max(1, max - min);
-  const step = Math.max(1000, Math.floor(span / 60));
-  timelineState = { min, max, step, playing: false, timer: null };
-  timelineRange.min = String(min);
-  timelineRange.max = String(max);
-  timelineRange.step = String(step);
-  timelineRange.value = String(max);
-  timelineRange.disabled = false;
-  playBtn.disabled = false;
-  updateTimelineLabel(max);
-  applyTimeline(max);
-}
-
-function updateTimelineLabel(value) {
-  timelineLabel.textContent = new Date(Number(value)).toLocaleString();
-}
-
-function applyTimeline(currentMs) {
-  if (!graphView) {
-    return;
-  }
-  const activeNodes = new Set();
-  graphView.graph.edges.forEach((edge) => {
-    const edgeTime = new Date(edge.timestamp).getTime();
-    if (edgeTime <= currentMs) {
-      const sourceId = typeof edge.source === 'object' ? edge.source.id : edge.source;
-      const targetId = typeof edge.target === 'object' ? edge.target.id : edge.target;
-      activeNodes.add(sourceId);
-      activeNodes.add(targetId);
-    }
-  });
-
-  graphView.link
-    .attr('opacity', (edge) => new Date(edge.timestamp).getTime() <= currentMs ? 0.85 : 0.05)
-    .attr('stroke-width', (edge) => (new Date(edge.timestamp).getTime() <= currentMs ? (edge.suspicious ? 2.5 : 1.2) : 0.6));
-
-  graphView.node.attr('opacity', (node) => (activeNodes.has(node.id) ? 1 : 0.15));
-  graphView.label.attr('opacity', (node) => (activeNodes.has(node.id) ? 0.7 : 0.05));
-}
-
-function togglePlay() {
-  if (timelineState.playing) {
-    stopPlay();
-    return;
-  }
-  timelineState.playing = true;
-  playBtn.textContent = 'Pause';
-  timelineState.timer = setInterval(() => {
-    const current = Number(timelineRange.value);
-    const next = current + timelineState.step;
-    if (next >= timelineState.max) {
-      timelineRange.value = String(timelineState.max);
-      applyTimeline(timelineState.max);
-      updateTimelineLabel(timelineState.max);
-      stopPlay();
-      return;
-    }
-    timelineRange.value = String(next);
-    applyTimeline(next);
-    updateTimelineLabel(next);
-  }, 500);
-}
-
-function stopPlay() {
-  if (timelineState.timer) {
-    clearInterval(timelineState.timer);
-  }
-  timelineState.playing = false;
-  playBtn.textContent = 'Play';
-  timelineState.timer = null;
-}
-
-if (timelineRange) {
-  timelineRange.addEventListener('input', (event) => {
-    const value = Number(event.target.value);
-    stopPlay();
-    applyTimeline(value);
-    updateTimelineLabel(value);
-  });
-}
-
-if (playBtn) {
-  playBtn.addEventListener('click', togglePlay);
-}
