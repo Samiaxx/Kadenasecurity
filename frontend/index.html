@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TraceLoom - Hybrid Fraud Tracing</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=Space+Grotesk:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <div class="logo">TraceLoom / Hybrid Fraud Graph</div>
+    <h1>Expose stolen-fund flows with verifiable on-chain anchors.</h1>
+    <p>Enter a wallet or transaction hash to build a multi-chain trace. Risk heuristics highlight bridges, mixers, fan-out, and rapid hops. Anchor cases on Kadena for public auditability.</p>
+  </header>
+
+  <main>
+    <div class="grid">
+      <section class="card">
+        <h2>Investigation Input</h2>
+        <p>Paste a compromised wallet address or transaction hash.</p>
+        <div class="input-row">
+          <input id="seedInput" placeholder="Wallet address or transaction hash" />
+          <select id="depthInput">
+            <option value="2">Depth 2</option>
+            <option value="3" selected>Depth 3</option>
+            <option value="4">Depth 4</option>
+          </select>
+        </div>
+        <button id="traceBtn">Trace Now</button>
+        <button id="registerBtn" class="secondary">Register Fraud Case</button>
+
+        <div style="margin-top: 18px;">
+          <h3>Risk Legend</h3>
+          <div class="legend">
+            <div class="legend-item"><span class="dot"></span>Low risk</div>
+            <div class="legend-item"><span class="dot warning"></span>Medium risk</div>
+            <div class="legend-item"><span class="dot danger"></span>High risk</div>
+          </div>
+        </div>
+
+        <div style="margin-top: 18px;">
+          <h3>Case Notes</h3>
+          <input id="caseTitle" placeholder="Case title" />
+          <textarea id="caseNotes" placeholder="Add investigator notes for the public audit trail"></textarea>
+          <p id="caseStatus"></p>
+          <p id="traceMeta"></p>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Transaction Flow Graph</h2>
+        <div id="graph"></div>
+        <div class="legend" id="chainSummary"></div>
+      </section>
+    </div>
+
+    <section class="card" style="margin-top: 28px;">
+      <h2>Wallet Risk Attestations</h2>
+      <p>High-risk wallets detected in the latest trace, ready to anchor on-chain.</p>
+      <div class="audit-list" id="attestationList"></div>
+    </section>
+
+    <section class="card" style="margin-top: 28px;">
+      <h2>Public Audit Trail</h2>
+      <p>Recent fraud cases anchored from this dashboard.</p>
+      <div class="audit-list" id="caseList"></div>
+    </section>
+  </main>
+
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

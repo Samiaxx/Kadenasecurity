@@ -1,0 +1,11 @@
+# dependencies
+node_modules/
+
+# logs
+npm-debug.log*
+
+# runtime
+api/data/cases.json
+
+# OS
+.DS_Store

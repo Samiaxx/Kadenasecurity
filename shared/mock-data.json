@@ -1,0 +1,163 @@
+{
+  "chains": {
+    "ethereum": {
+      "name": "Ethereum",
+      "symbol": "ETH",
+      "mixers": ["0xMIXERETH1"],
+      "bridges": ["0xETHBRIDGE1"],
+      "contracts": ["0xDEXETH1"],
+      "transactions": [
+        {
+          "hash": "0xeth001",
+          "from": "0xVICTIM1",
+          "to": "0xATTACKER1",
+          "amount": 14.2,
+          "asset": "ETH",
+          "timestamp": "2026-03-10T12:01:00Z",
+          "type": "theft"
+        },
+        {
+          "hash": "0xeth002",
+          "from": "0xATTACKER1",
+          "to": "0xETHBRIDGE1",
+          "amount": 8.0,
+          "asset": "ETH",
+          "timestamp": "2026-03-10T12:04:00Z",
+          "type": "bridge",
+          "bridgeTo": "bsc",
+          "bridgeTag": "BRIDGE-ALPHA"
+        },
+        {
+          "hash": "0xeth003",
+          "from": "0xATTACKER1",
+          "to": "0xMIXERETH1",
+          "amount": 3.4,
+          "asset": "ETH",
+          "timestamp": "2026-03-10T12:05:30Z",
+          "type": "mixer"
+        },
+        {
+          "hash": "0xeth004",
+          "from": "0xATTACKER1",
+          "to": "0xHOPPER1",
+          "amount": 1.8,
+          "asset": "ETH",
+          "timestamp": "2026-03-10T12:06:00Z",
+          "type": "transfer"
+        },
+        {
+          "hash": "0xeth005",
+          "from": "0xHOPPER1",
+          "to": "0xHOPPER2",
+          "amount": 1.75,
+          "asset": "ETH",
+          "timestamp": "2026-03-10T12:06:40Z",
+          "type": "transfer"
+        },
+        {
+          "hash": "0xeth006",
+          "from": "0xHOPPER2",
+          "to": "0xDEXETH1",
+          "amount": 1.7,
+          "asset": "ETH",
+          "timestamp": "2026-03-10T12:08:00Z",
+          "type": "contract"
+        }
+      ]
+    },
+    "bsc": {
+      "name": "BNB Smart Chain",
+      "symbol": "BNB",
+      "mixers": ["0xMIXERBSC1"],
+      "bridges": ["0xBSCBRIDGE1"],
+      "contracts": ["0xDEXBSC1"],
+      "transactions": [
+        {
+          "hash": "0xbsc001",
+          "from": "0xBSCBRIDGE1",
+          "to": "0xATTACKERBSC1",
+          "amount": 7.95,
+          "asset": "BNB",
+          "timestamp": "2026-03-10T12:08:30Z",
+          "type": "bridge",
+          "bridgeFrom": "ethereum",
+          "bridgeTag": "BRIDGE-ALPHA"
+        },
+        {
+          "hash": "0xbsc002",
+          "from": "0xATTACKERBSC1",
+          "to": "0xFANOUT1",
+          "amount": 2.0,
+          "asset": "BNB",
+          "timestamp": "2026-03-10T12:10:00Z",
+          "type": "transfer"
+        },
+        {
+          "hash": "0xbsc003",
+          "from": "0xATTACKERBSC1",
+          "to": "0xFANOUT2",
+          "amount": 2.0,
+          "asset": "BNB",
+          "timestamp": "2026-03-10T12:10:05Z",
+          "type": "transfer"
+        },
+        {
+          "hash": "0xbsc004",
+          "from": "0xATTACKERBSC1",
+          "to": "0xFANOUT3",
+          "amount": 1.9,
+          "asset": "BNB",
+          "timestamp": "2026-03-10T12:10:08Z",
+          "type": "transfer"
+        },
+        {
+          "hash": "0xbsc005",
+          "from": "0xFANOUT3",
+          "to": "0xMIXERBSC1",
+          "amount": 1.85,
+          "asset": "BNB",
+          "timestamp": "2026-03-10T12:11:30Z",
+          "type": "mixer"
+        },
+        {
+          "hash": "0xbsc006",
+          "from": "0xFANOUT2",
+          "to": "0xDEXBSC1",
+          "amount": 1.95,
+          "asset": "BNB",
+          "timestamp": "2026-03-10T12:12:10Z",
+          "type": "contract"
+        }
+      ]
+    },
+    "bitcoin": {
+      "name": "Bitcoin",
+      "symbol": "BTC",
+      "mixers": ["bc1qmixertest1"],
+      "bridges": ["bc1qbridge1"],
+      "contracts": [],
+      "transactions": [
+        {
+          "hash": "btc001",
+          "from": "bc1qattacker",
+          "to": "bc1qbridge1",
+          "amount": 0.42,
+          "asset": "BTC",
+          "timestamp": "2026-03-10T12:16:00Z",
+          "type": "bridge",
+          "bridgeTo": "ethereum",
+          "bridgeTag": "BRIDGE-OMEGA"
+        },
+        {
+          "hash": "btc002",
+          "from": "bc1qbridge1",
+          "to": "bc1qexit",
+          "amount": 0.41,
+          "asset": "BTC",
+          "timestamp": "2026-03-10T12:20:00Z",
+          "type": "transfer"
+        }
+      ]
+    }
+  }
+}

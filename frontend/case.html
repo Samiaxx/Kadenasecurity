@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TraceLoom Case</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=Space+Grotesk:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <div class="logo">TraceLoom / Case Detail</div>
+    <h1 id="caseTitle">Fraud Case</h1>
+    <p id="caseMeta">Loading...</p>
+  </header>
+
+  <main>
+    <div class="grid">
+      <section class="card">
+        <h2>Case Notes</h2>
+        <p id="caseNotes">No notes yet.</p>
+        <h3>On-chain Anchor</h3>
+        <div id="caseAnchor"></div>
+      </section>
+      <section class="card">
+        <h2>Transaction Flow Graph</h2>
+        <div id="graph"></div>
+        <div class="legend" id="chainSummary"></div>
+      </section>
+    </div>
+  </main>
+
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="case.js"></script>
+</body>
+</html>
