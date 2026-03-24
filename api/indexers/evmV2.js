@@ -46,6 +46,7 @@ function createEvmIndexer(config) {
   const minIntervalMs = config.minIntervalMs;
   const symbol = config.symbol;
   const name = config.name;
+  const isV2 = config.useV2 ?? apiUrl.includes('/v2/');
   const mixers = parseList(config.mixers || '');
   const bridges = parseTaggedList(config.bridges || '');
   const contracts = parseList(config.contracts || '');
@@ -53,7 +54,9 @@ function createEvmIndexer(config) {
 
   function buildUrl(params) {
     const url = new URL(apiUrl);
-    url.searchParams.set('chainid', chainId);
+    if (isV2 && chainId) {
+      url.searchParams.set('chainid', chainId);
+    }
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== '') {
         url.searchParams.set(key, String(value));

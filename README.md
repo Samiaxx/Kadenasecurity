@@ -3,7 +3,7 @@
 This repository implements a hybrid fraud tracing system that combines off-chain analysis with Kadena Pact smart contracts for immutable, verifiable fraud case anchors.
 
 ## What is included
-- Live multi-chain indexers (Ethereum + BNB Smart Chain via Etherscan V2, Bitcoin via Blockstream Esplora).
+- Live multi-chain indexers (Ethereum via Etherscan V2, BNB Smart Chain via BscScan, Bitcoin via Blockstream Esplora).
 - Recursive transaction graph builder and risk heuristics engine (fan-out, bridge usage, mixer usage, rapid hops).
 - Interactive frontend graph visualization with color-coded risk paths.
 - API layer serving traces and fraud cases.
@@ -31,10 +31,11 @@ ETHERSCAN_TX_LIMIT=25
 ETHERSCAN_MIN_INTERVAL_MS=350
 
 BSCSCAN_API_KEY=your_bscscan_key_or_leave_blank_to_reuse_etherscan
-BSCSCAN_API_URL=https://api.etherscan.io/v2/api
+BSCSCAN_API_URL=https://api.bscscan.com/api
 BSC_CHAIN_ID=56
 BSCSCAN_TX_LIMIT=25
 BSCSCAN_MIN_INTERVAL_MS=350
+BSCSCAN_USE_V2=false
 
 BTC_API_URL=https://blockstream.info/api
 BTC_TX_LIMIT=25

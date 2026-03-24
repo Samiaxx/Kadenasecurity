@@ -18,10 +18,11 @@ const BSC_INDEXER = createEvmIndexer({
   chainId: process.env.BSC_CHAIN_ID || '56',
   name: 'BNB Smart Chain',
   symbol: 'BNB',
-  apiUrl: process.env.BSCSCAN_API_URL || process.env.ETHERSCAN_API_URL || 'https://api.etherscan.io/v2/api',
+  apiUrl: process.env.BSCSCAN_API_URL || 'https://api.bscscan.com/api',
   apiKey: process.env.BSCSCAN_API_KEY || process.env.ETHERSCAN_API_KEY || '',
   txLimit: Number(process.env.BSCSCAN_TX_LIMIT || 25),
   minIntervalMs: Number(process.env.BSCSCAN_MIN_INTERVAL_MS || 350),
+  useV2: process.env.BSCSCAN_USE_V2 === 'true',
   mixers: process.env.BSC_MIXERS || '',
   bridges: process.env.BSC_BRIDGES || '',
   contracts: process.env.BSC_CONTRACTS || ''
