@@ -1,6 +1,11 @@
-const ETHERSCAN_API_URL = process.env.ETHERSCAN_API_URL || 'https://api.etherscan.io/api';
+const ETHERSCAN_API_URL = process.env.ETHERSCAN_API_URL || 'https://api.etherscan.io/v2/api';
 const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY || '';
 const ETHERSCAN_TX_LIMIT = Number(process.env.ETHERSCAN_TX_LIMIT || 50);
+const ETH_CHAIN_ID = process.env.ETH_CHAIN_ID || '1';
+const ETHERSCAN_MIN_INTERVAL_MS = Number(process.env.ETHERSCAN_MIN_INTERVAL_MS || 350);
+
+let requestQueue = Promise.resolve();
+let lastRequestTime = 0;
 
 function parseList(value) {
   return value
@@ -15,6 +20,7 @@ function getConfigList(envKey) {
 
 function buildUrl(params) {
   const url = new URL(ETHERSCAN_API_URL);
+  url.searchParams.set('chainid', ETH_CHAIN_ID);
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined && value !== null && value !== '') {
       url.searchParams.set(key, String(value));
@@ -27,11 +33,27 @@ function buildUrl(params) {
 }
 
 async function fetchJson(url) {
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`Etherscan request failed: ${response.status}`);
-  }
-  return response.json();
+  return enqueueRequest(async () => {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Etherscan request failed: ${response.status}`);
+    }
+    return response.json();
+  });
+}
+
+function enqueueRequest(fn) {
+  requestQueue = requestQueue.then(async () => {
+    const now = Date.now();
+    const wait = Math.max(0, ETHERSCAN_MIN_INTERVAL_MS - (now - lastRequestTime));
+    if (wait > 0) {
+      await new Promise((resolve) => setTimeout(resolve, wait));
+    }
+    const result = await fn();
+    lastRequestTime = Date.now();
+    return result;
+  });
+  return requestQueue;
 }
 
 function weiToEth(value) {

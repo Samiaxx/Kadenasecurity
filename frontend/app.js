@@ -9,9 +9,34 @@ const caseTitle = document.getElementById('caseTitle');
 const caseNotes = document.getElementById('caseNotes');
 const attestationList = document.getElementById('attestationList');
 const traceMeta = document.getElementById('traceMeta');
+const minAmountInput = document.getElementById('minAmount');
+const excludeContractsInput = document.getElementById('excludeContracts');
+const onlySuspiciousInput = document.getElementById('onlySuspicious');
+const filterSummary = document.getElementById('filterSummary');
 
 let latestGraph = null;
 let graphView = null;
+
+async function fetchJson(url, options = {}, timeoutMs = 15000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(url, { ...options, signal: controller.signal });
+    const text = await response.text();
+    let data = {};
+    try {
+      data = text ? JSON.parse(text) : {};
+    } catch (error) {
+      data = { error: text };
+    }
+    if (!response.ok) {
+      throw new Error(data.error || `Request failed (${response.status})`);
+    }
+    return data;
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 function riskColor(score) {
   if (score >= 75) return '#ff5c5c';
@@ -33,14 +58,23 @@ async function trace() {
   }
   caseStatus.textContent = 'Tracing...';
   const depth = depthInput.value;
-  const response = await fetch(`/api/trace?seed=${encodeURIComponent(seed)}&depth=${depth}`);
-  const graph = await response.json();
-  latestGraph = graph;
-  renderGraph(graph);
-  renderChainSummary(graph.meta.chains);
-  renderAttestations(graph);
-  caseStatus.textContent = `Trace complete. ${graph.nodes.length} nodes, ${graph.edges.length} edges.`;
-  traceMeta.textContent = `Generated: ${new Date(graph.meta.generatedAt).toLocaleString()}`;
+  try {
+    const graph = await fetchJson(`/api/trace?seed=${encodeURIComponent(seed)}&depth=${depth}`);
+    if (!graph.nodes || !graph.edges) {
+      throw new Error('Trace returned no graph data.');
+    }
+    latestGraph = graph;
+    const filteredGraph = applyFilters();
+    const summary = buildChainSummary(filteredGraph.edges, graph.meta?.chains);
+    renderGraph(filteredGraph);
+    renderChainSummary(summary);
+    renderAttestations(filteredGraph);
+    caseStatus.textContent = `Trace complete. ${filteredGraph.nodes.length} nodes, ${filteredGraph.edges.length} edges.`;
+    traceMeta.textContent = `Generated: ${new Date(graph.meta.generatedAt).toLocaleString()}`;
+    updateFilterSummary();
+  } catch (error) {
+    caseStatus.textContent = `Trace failed: ${error.message}`;
+  }
 }
 
 async function registerCase() {
@@ -56,14 +90,17 @@ async function registerCase() {
     notes: caseNotes.value.trim() || '',
     depth: Number(depthInput.value) || 3
   };
-  const response = await fetch('/api/case', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
-  const result = await response.json();
-  caseStatus.textContent = `Case registered. Shareable URL: ${result.shareUrl}`;
-  loadCases();
+  try {
+    const result = await fetchJson('/api/case', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    caseStatus.textContent = `Case registered. Shareable URL: ${result.shareUrl}`;
+    loadCases();
+  } catch (error) {
+    caseStatus.textContent = `Case registration failed: ${error.message}`;
+  }
 }
 
 function renderChainSummary(summary) {
@@ -99,6 +136,79 @@ function renderAttestations(graph) {
     `;
     attestationList.appendChild(item);
   });
+}
+
+function applyFilters() {
+  if (!latestGraph) {
+    return { nodes: [], edges: [], meta: { chains: {} } };
+  }
+  const minAmount = Number(minAmountInput?.value || 0);
+  const excludeContracts = Boolean(excludeContractsInput?.checked);
+  const onlySuspicious = Boolean(onlySuspiciousInput?.checked);
+
+  const edges = latestGraph.edges.filter((edge) => {
+    if (Number(edge.amount || 0) < minAmount) {
+      return false;
+    }
+    if (excludeContracts && edge.type === 'contract') {
+      return false;
+    }
+    if (onlySuspicious && !edge.suspicious) {
+      return false;
+    }
+    return true;
+  });
+
+  const nodeIds = new Set();
+  edges.forEach((edge) => {
+    const sourceId = typeof edge.source === 'object' ? edge.source.id : edge.source;
+    const targetId = typeof edge.target === 'object' ? edge.target.id : edge.target;
+    nodeIds.add(sourceId);
+    nodeIds.add(targetId);
+  });
+
+  const nodes = latestGraph.nodes.filter((node) => nodeIds.has(node.id));
+
+  return {
+    nodes,
+    edges,
+    meta: latestGraph.meta
+  };
+}
+
+function buildChainSummary(edges, metaChains) {
+  const summary = {};
+  edges.forEach((edge) => {
+    const meta = metaChains ? metaChains[edge.chain] : null;
+    const name = meta ? meta.name : edge.chain;
+    if (!summary[edge.chain]) {
+      summary[edge.chain] = {
+        name,
+        edges: 0,
+        suspiciousEdges: 0
+      };
+    }
+    summary[edge.chain].edges += 1;
+    if (edge.suspicious) {
+      summary[edge.chain].suspiciousEdges += 1;
+    }
+  });
+  return summary;
+}
+
+function updateFilterSummary() {
+  if (!filterSummary) {
+    return;
+  }
+  if (!latestGraph) {
+    filterSummary.textContent = 'Filtered: 0 / 0 edges';
+    return;
+  }
+  const filtered = applyFilters();
+  const total = latestGraph.edges.length;
+  const shown = filtered.edges.length;
+  const removed = total - shown;
+  filterSummary.textContent = `Filtered: ${removed} / ${total} edges`;
 }
 
 function renderGraph(graph) {
@@ -273,3 +383,39 @@ registerBtn.addEventListener('click', registerCase);
 
 loadCases();
 renderAttestations({ nodes: [] });
+
+if (minAmountInput) {
+  minAmountInput.addEventListener('input', () => {
+    if (!latestGraph) return;
+    const filteredGraph = applyFilters();
+    renderGraph(filteredGraph);
+    renderChainSummary(buildChainSummary(filteredGraph.edges, latestGraph.meta?.chains));
+    renderAttestations(filteredGraph);
+    caseStatus.textContent = `Trace complete. ${filteredGraph.nodes.length} nodes, ${filteredGraph.edges.length} edges.`;
+    updateFilterSummary();
+  });
+}
+
+if (excludeContractsInput) {
+  excludeContractsInput.addEventListener('change', () => {
+    if (!latestGraph) return;
+    const filteredGraph = applyFilters();
+    renderGraph(filteredGraph);
+    renderChainSummary(buildChainSummary(filteredGraph.edges, latestGraph.meta?.chains));
+    renderAttestations(filteredGraph);
+    caseStatus.textContent = `Trace complete. ${filteredGraph.nodes.length} nodes, ${filteredGraph.edges.length} edges.`;
+    updateFilterSummary();
+  });
+}
+
+if (onlySuspiciousInput) {
+  onlySuspiciousInput.addEventListener('change', () => {
+    if (!latestGraph) return;
+    const filteredGraph = applyFilters();
+    renderGraph(filteredGraph);
+    renderChainSummary(buildChainSummary(filteredGraph.edges, latestGraph.meta?.chains));
+    renderAttestations(filteredGraph);
+    caseStatus.textContent = `Trace complete. ${filteredGraph.nodes.length} nodes, ${filteredGraph.edges.length} edges.`;
+    updateFilterSummary();
+  });
+}

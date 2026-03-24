@@ -1,11 +1,11 @@
-const express = require('express');
-const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
+loadEnv();
+
+const express = require('express');
+const cors = require('cors');
 const { v4: uuidv4 } = require('uuid');
 const { buildGraph } = require('./graph/graphBuilder');
-
-loadEnv();
 
 const app = express();
 const CASES_PATH = path.join(__dirname, 'data', 'cases.json');
@@ -19,7 +19,12 @@ app.use(express.json({ limit: '1mb' }));
 app.use(express.static(path.join(__dirname, '..', 'frontend')));
 
 function loadEnv() {
-  const envPath = path.join(__dirname, '.env');
+  const primaryEnv = path.join(__dirname, '.env');
+  const fallbackEnv = path.join(__dirname, 'api.env');
+  let envPath = primaryEnv;
+  if (!fs.existsSync(envPath)) {
+    envPath = fallbackEnv;
+  }
   if (!fs.existsSync(envPath)) {
     return;
   }
@@ -29,14 +34,16 @@ function loadEnv() {
     if (!trimmed || trimmed.startsWith('#')) {
       return;
     }
-    const [key, ...rest] = trimmed.split('=');
-    if (!key) {
+    const [rawKey, ...rest] = trimmed.split('=');
+    if (!rawKey) {
       return;
     }
-    const value = rest.join('=').trim();
-    if (!process.env[key]) {
-      process.env[key] = value;
+    const key = rawKey.replace(/^\uFEFF/, '');
+    let value = rest.join('=').trim();
+    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+      value = value.slice(1, -1);
     }
+    process.env[key] = value;
   });
 }
 
