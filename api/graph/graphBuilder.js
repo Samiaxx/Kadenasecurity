@@ -10,7 +10,9 @@ const {
 const { scoreGraphRisk } = require('./riskEngine');
 
 function looksLikeTxHash(seed) {
-  return seed.startsWith('0x') && seed.length >= 8 || seed.startsWith('btc');
+  const isHex64 = /^[0-9a-fA-F]{64}$/.test(seed);
+  const isHexPrefixed = /^0x[0-9a-fA-F]{64}$/.test(seed);
+  return isHex64 || isHexPrefixed;
 }
 
 async function buildGraph({ seed, depth = 2, maxNodes = 120 }) {
@@ -23,10 +25,16 @@ async function buildGraph({ seed, depth = 2, maxNodes = 120 }) {
 
   const seedInfo = looksLikeTxHash(seed) ? await findTxByHash(seed) : null;
   if (seedInfo) {
-    const { chainId, tx } = seedInfo;
-    queue.push({ chainId, address: tx.from, depth: 0 });
-    queue.push({ chainId, address: tx.to, depth: 0 });
-    addEdge(edges, edgeSet, normalizeEdge(chainId, tx));
+    const { chainId, txs } = seedInfo;
+    txs.forEach((tx) => {
+      if (tx.from) {
+        queue.push({ chainId, address: tx.from, depth: 0 });
+      }
+      if (tx.to) {
+        queue.push({ chainId, address: tx.to, depth: 0 });
+      }
+      addEdge(edges, edgeSet, normalizeEdge(chainId, tx));
+    });
   } else {
     for (const chainId of chains) {
       queue.push({ chainId, address: seed, depth: 0 });
@@ -140,8 +148,9 @@ function classifyAddress(chainId, address) {
 }
 
 function normalizeEdge(chainId, tx) {
+  const edgeKey = tx.edgeId || tx.hash;
   return {
-    id: `${chainId}:${tx.hash}`,
+    id: `${chainId}:${edgeKey}`,
     hash: tx.hash,
     from: `${chainId}:${tx.from}`,
     to: `${chainId}:${tx.to}`,
