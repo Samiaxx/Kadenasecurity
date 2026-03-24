@@ -1,85 +1,77 @@
-const fs = require('fs');
-const path = require('path');
+const {
+  getConfigList,
+  getTransactionByHash,
+  getTransactionsByAddress: fetchTransactionsByAddress
+} = require('./etherscan');
 
-const dataPath = path.join(__dirname, '..', '..', 'shared', 'mock-data.json');
-
-function loadData() {
-  const raw = fs.readFileSync(dataPath, 'utf-8');
-  return JSON.parse(raw);
-}
-
-function getChainData(chainId) {
-  const data = loadData();
-  const chain = data.chains[chainId];
-  if (!chain) {
-    return null;
-  }
-  return chain;
-}
+const CHAIN_ID = 'ethereum';
 
 function listChains() {
-  const data = loadData();
-  return Object.keys(data.chains);
+  return [CHAIN_ID];
 }
 
-function findTxByHash(hash) {
-  const data = loadData();
-  for (const [chainId, chain] of Object.entries(data.chains)) {
-    const match = chain.transactions.find((tx) => tx.hash === hash);
-    if (match) {
-      return { chainId, tx: match };
-    }
+async function findTxByHash(hash) {
+  const tx = await getTransactionByHash(hash);
+  if (!tx) {
+    return null;
   }
-  return null;
+  return { chainId: CHAIN_ID, tx };
 }
 
-function findBridgeTransactions(bridgeTag) {
-  const data = loadData();
-  const matches = [];
-  for (const [chainId, chain] of Object.entries(data.chains)) {
-    const hits = chain.transactions.filter((tx) => tx.bridgeTag === bridgeTag);
-    for (const tx of hits) {
-      matches.push({ chainId, tx });
-    }
-  }
-  return matches;
-}
-
-function getTransactionsByAddress(chainId, address) {
-  const chain = getChainData(chainId);
-  if (!chain) {
+async function getTransactionsByAddress(chainId, address) {
+  if (chainId !== CHAIN_ID) {
     return [];
   }
-  return chain.transactions.filter(
-    (tx) => tx.from === address || tx.to === address
-  );
+  return fetchTransactionsByAddress(address);
 }
 
-function getTransactionsByAddresses(chainId, addresses) {
-  const chain = getChainData(chainId);
-  if (!chain) {
+async function getTransactionsByAddresses(chainId, addresses) {
+  if (chainId !== CHAIN_ID) {
     return [];
   }
-  const addressSet = new Set(addresses);
-  return chain.transactions.filter(
-    (tx) => addressSet.has(tx.from) || addressSet.has(tx.to)
+  const results = await Promise.all(
+    addresses.map((address) => fetchTransactionsByAddress(address))
   );
+  const flattened = results.flat();
+  const seen = new Set();
+  return flattened.filter((tx) => {
+    if (seen.has(tx.hash)) {
+      return false;
+    }
+    seen.add(tx.hash);
+    return true;
+  });
 }
 
 function getKnownMixers(chainId) {
-  const chain = getChainData(chainId);
-  if (!chain) {
+  if (chainId !== CHAIN_ID) {
     return [];
   }
-  return chain.mixers || [];
+  return getConfigList('ETH_MIXERS');
 }
 
 function getKnownBridges(chainId) {
-  const chain = getChainData(chainId);
-  if (!chain) {
+  if (chainId !== CHAIN_ID) {
     return [];
   }
-  return chain.bridges || [];
+  return getConfigList('ETH_BRIDGES');
+}
+
+function findBridgeTransactions() {
+  return [];
+}
+
+function getChainData(chainId) {
+  if (chainId !== CHAIN_ID) {
+    return null;
+  }
+  return {
+    name: 'Ethereum',
+    symbol: 'ETH',
+    mixers: getKnownMixers(chainId),
+    bridges: getKnownBridges(chainId),
+    contracts: getConfigList('ETH_CONTRACTS')
+  };
 }
 
 module.exports = {

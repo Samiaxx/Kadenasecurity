@@ -13,7 +13,7 @@ function looksLikeTxHash(seed) {
   return seed.startsWith('0x') && seed.length >= 8 || seed.startsWith('btc');
 }
 
-function buildGraph({ seed, depth = 2, maxNodes = 120 }) {
+async function buildGraph({ seed, depth = 2, maxNodes = 120 }) {
   const chains = listChains();
   const nodes = new Map();
   const edges = [];
@@ -21,7 +21,7 @@ function buildGraph({ seed, depth = 2, maxNodes = 120 }) {
   const queue = [];
   const visited = new Set();
 
-  const seedInfo = looksLikeTxHash(seed) ? findTxByHash(seed) : null;
+  const seedInfo = looksLikeTxHash(seed) ? await findTxByHash(seed) : null;
   if (seedInfo) {
     const { chainId, tx } = seedInfo;
     queue.push({ chainId, address: tx.from, depth: 0 });
@@ -57,7 +57,7 @@ function buildGraph({ seed, depth = 2, maxNodes = 120 }) {
       continue;
     }
 
-    const txs = getTransactionsByAddresses(current.chainId, [current.address]);
+    const txs = await getTransactionsByAddresses(current.chainId, [current.address]);
     for (const tx of txs) {
       addEdge(edges, edgeSet, normalizeEdge(current.chainId, tx));
       addNode(nodes, {
@@ -82,7 +82,7 @@ function buildGraph({ seed, depth = 2, maxNodes = 120 }) {
 
       if (tx.type === 'bridge') {
         if (tx.bridgeTag) {
-          const matches = findBridgeTransactions(tx.bridgeTag);
+          const matches = await findBridgeTransactions(tx.bridgeTag);
           for (const match of matches) {
             if (match.chainId === current.chainId) {
               continue;
