@@ -67,7 +67,24 @@ function writeCases(cases) {
 }
 
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', time: new Date().toISOString() });
+  res.json({
+    status: 'ok',
+    time: new Date().toISOString(),
+    chains: {
+      ethereum: {
+        apiUrl: (process.env.ETHERSCAN_API_URL || '').split('?')[0],
+        chainId: process.env.ETH_CHAIN_ID || '1'
+      },
+      bsc: {
+        apiUrl: (process.env.BSCSCAN_API_URL || '').split('?')[0],
+        chainId: process.env.BSC_CHAIN_ID || '56',
+        useV2: process.env.BSCSCAN_USE_V2 || 'false'
+      },
+      bitcoin: {
+        apiUrl: (process.env.BTC_API_URL || '').split('?')[0]
+      }
+    }
+  });
 });
 
 app.get('/api/trace', async (req, res) => {
