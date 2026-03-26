@@ -69,12 +69,23 @@ function createEvmIndexer(config) {
   }
 
   async function fetchJson(url) {
+    if (process.env.DEBUG_API_URL_LOG !== 'done') {
+      console.log(`[evm-${name}] using URL: ${url}`);
+      console.log(`[evm-${name}] apiKey set: ${apiKey ? 'yes' : 'no'}`);
+      process.env.DEBUG_API_URL_LOG = 'done';
+    }
     return enqueue(async () => {
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`Etherscan request failed: ${response.status}`);
       }
-      return response.json();
+      const text = await response.text();
+      try {
+        return JSON.parse(text);
+      } catch (err) {
+        console.error(`[evm-${name}] non-JSON response: ${text}`);
+        throw err;
+      }
     });
   }
 
@@ -162,7 +173,16 @@ function createEvmIndexer(config) {
     });
     const payload = await fetchJson(url);
     if (payload.status !== '1' && payload.message !== 'No transactions found') {
-      throw new Error(payload.result || 'Etherscan txlist error');
+      try {
+        require('fs').appendFileSync(
+          require('path').join(__dirname, '..', 'evm-debug.log'),
+          `[${new Date().toISOString()}][${name}] txlist error URL=${url}\n${JSON.stringify(payload)}\n\n`
+        );
+      } catch (err) {
+        /* ignore */
+      }
+      console.error(`[evm-${name}] txlist error`, payload);
+      throw new Error(payload.result || payload.message || 'Etherscan txlist error');
     }
     const list = Array.isArray(payload.result) ? payload.result : [];
     return list.map((tx) =>

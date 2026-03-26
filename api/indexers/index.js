@@ -14,19 +14,22 @@ const ETH_INDEXER = createEvmIndexer({
   contracts: process.env.ETH_CONTRACTS || ''
 });
 
-const BSC_INDEXER = createEvmIndexer({
-  chainId: process.env.BSC_CHAIN_ID || '56',
-  name: 'BNB Smart Chain',
-  symbol: 'BNB',
-  apiUrl: process.env.BSCSCAN_API_URL || 'https://api.bscscan.com/api',
-  apiKey: process.env.BSCSCAN_API_KEY || process.env.ETHERSCAN_API_KEY || '',
-  txLimit: Number(process.env.BSCSCAN_TX_LIMIT || 25),
-  minIntervalMs: Number(process.env.BSCSCAN_MIN_INTERVAL_MS || 350),
-  useV2: process.env.BSCSCAN_USE_V2 === 'true',
-  mixers: process.env.BSC_MIXERS || '',
-  bridges: process.env.BSC_BRIDGES || '',
-  contracts: process.env.BSC_CONTRACTS || ''
-});
+const BSC_INDEXER =
+  (process.env.BSCSCAN_API_KEY || '').trim() !== ''
+    ? createEvmIndexer({
+        chainId: process.env.BSC_CHAIN_ID || '56',
+        name: 'BNB Smart Chain',
+        symbol: 'BNB',
+        apiUrl: process.env.BSCSCAN_API_URL || 'https://api.etherscan.io/v2/api',
+        apiKey: process.env.BSCSCAN_API_KEY,
+        txLimit: Number(process.env.BSCSCAN_TX_LIMIT || 25),
+        minIntervalMs: Number(process.env.BSCSCAN_MIN_INTERVAL_MS || 350),
+        useV2: process.env.BSCSCAN_USE_V2 ? process.env.BSCSCAN_USE_V2 === 'true' : true,
+        mixers: process.env.BSC_MIXERS || '',
+        bridges: process.env.BSC_BRIDGES || '',
+        contracts: process.env.BSC_CONTRACTS || ''
+      })
+    : null;
 
 const BTC_INDEXER = createBitcoinIndexer({
   apiUrl: process.env.BTC_API_URL || 'https://blockstream.info/api',
@@ -38,7 +41,7 @@ const BTC_INDEXER = createBitcoinIndexer({
 
 const CHAIN_INDEXERS = {
   ethereum: ETH_INDEXER,
-  bsc: BSC_INDEXER,
+  ...(BSC_INDEXER ? { bsc: BSC_INDEXER } : {}),
   bitcoin: BTC_INDEXER
 };
 
@@ -61,7 +64,12 @@ async function getTransactionsByAddress(chainId, address) {
   if (!indexer) {
     return [];
   }
-  return indexer.getTransactionsByAddress(address);
+  try {
+    return await indexer.getTransactionsByAddress(address);
+  } catch (err) {
+    console.error(`[indexer] ${chainId} address fetch failed: ${err.message}`);
+    return [];
+  }
 }
 
 async function getTransactionsByAddresses(chainId, addresses) {
@@ -69,7 +77,16 @@ async function getTransactionsByAddresses(chainId, addresses) {
   if (!indexer) {
     return [];
   }
-  const results = await Promise.all(addresses.map((addr) => indexer.getTransactionsByAddress(addr)));
+  const results = await Promise.all(
+    addresses.map(async (addr) => {
+      try {
+        return await indexer.getTransactionsByAddress(addr);
+      } catch (err) {
+        console.error(`[indexer] ${chainId} address fetch failed: ${err.message}`);
+        return [];
+      }
+    })
+  );
   const flattened = results.flat();
   const seen = new Set();
   return flattened.filter((tx) => {
