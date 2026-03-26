@@ -17,7 +17,7 @@ const filterSummary = document.getElementById('filterSummary');
 let latestGraph = null;
 let graphView = null;
 
-async function fetchJson(url, options = {}, timeoutMs = 15000) {
+async function fetchJson(url, options = {}, timeoutMs = 30000) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
