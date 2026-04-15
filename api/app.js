@@ -6,6 +6,7 @@ const express = require('express');
 const cors = require('cors');
 const { v4: uuidv4 } = require('uuid');
 const { buildGraph } = require('./graph/graphBuilder');
+const { getIndicators, reloadIndicators, INDICATOR_PATH } = require('./indicators');
 
 const app = express();
 const CASES_PATH = path.join(__dirname, 'data', 'cases.json');
@@ -67,25 +68,86 @@ function writeCases(cases) {
 }
 
 app.get('/api/health', (req, res) => {
+  const indicatorCounts = summaryCounts(getIndicators());
+  const hasAnyIndicators = Object.values(indicatorCounts).some((value) => value > 0);
+  const ethKeyConfigured = Boolean((process.env.ETHERSCAN_API_KEY || '').trim());
+  const bscKeyConfigured = Boolean((process.env.BSCSCAN_API_KEY || '').trim());
+  const ethApiUrl = process.env.ETHERSCAN_API_URL || 'https://api.etherscan.io/v2/api';
+  const bscApiUrl = process.env.BSCSCAN_API_URL || 'https://api.bscscan.com/api';
+  const btcApiUrl = process.env.BTC_API_URL || 'https://blockstream.info/api';
+  const chains = {
+    ethereum: {
+      name: 'Ethereum',
+      enabled: true,
+      configured: ethKeyConfigured,
+      setupHint: ethKeyConfigured ? '' : 'Set ETHERSCAN_API_KEY to enable reliable Ethereum tracing.',
+      apiUrl: ethApiUrl.split('?')[0],
+      chainId: process.env.ETH_CHAIN_ID || '1'
+    },
+    bsc: {
+      name: 'BNB Smart Chain',
+      enabled: bscKeyConfigured,
+      configured: bscKeyConfigured,
+      setupHint: bscKeyConfigured ? '' : 'Add BSCSCAN_API_KEY to turn on BNB Smart Chain tracing.',
+      apiUrl: bscApiUrl.split('?')[0],
+      chainId: process.env.BSC_CHAIN_ID || '56',
+      useV2: process.env.BSCSCAN_USE_V2 || 'false'
+    },
+    bitcoin: {
+      name: 'Bitcoin',
+      enabled: true,
+      configured: Boolean(btcApiUrl.trim()),
+      setupHint: '',
+      apiUrl: btcApiUrl
+    }
+  };
+
   res.json({
     status: 'ok',
     time: new Date().toISOString(),
-    chains: {
-      ethereum: {
-        apiUrl: (process.env.ETHERSCAN_API_URL || '').split('?')[0],
-        chainId: process.env.ETH_CHAIN_ID || '1'
-      },
-      bsc: {
-        apiUrl: (process.env.BSCSCAN_API_URL || '').split('?')[0],
-        chainId: process.env.BSC_CHAIN_ID || '56',
-        useV2: process.env.BSCSCAN_USE_V2 || 'false'
-      },
-      bitcoin: {
-        apiUrl: (process.env.BTC_API_URL || '').split('?')[0]
-      }
-    }
+    features: {
+      tracing: true,
+      caseRegistration: true,
+      attestations: true,
+      multiSeedTracing: true
+    },
+    indicators: {
+      path: INDICATOR_PATH,
+      counts: indicatorCounts,
+      totalCount: Object.values(indicatorCounts).reduce((sum, value) => sum + value, 0),
+      hasAnyIndicators
+    },
+    caseStorage: {
+      mode: isServerless ? 'memory' : 'file',
+      path: isServerless ? null : CASES_PATH
+    },
+    availableChains: Object.entries(chains)
+      .filter(([, chain]) => chain.enabled)
+      .map(([chainId]) => chainId),
+    chains
   });
 });
+
+app.post('/api/indicators/reload', (req, res) => {
+  try {
+    const data = reloadIndicators();
+    res.json({ status: 'reloaded', counts: summaryCounts(data) });
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'reload failed' });
+  }
+});
+
+function summaryCounts(data) {
+  return {
+    mixers: Object.values(data.mixers || {}).reduce((a, b) => a + b.length, 0),
+    bridges: Object.values(data.bridges || {}).reduce((a, b) => a + b.length, 0),
+    cexEndpoints: Object.values(data.cexEndpoints || {}).reduce((a, b) => a + b.length, 0),
+    drainerBytecodes: (data.drainerBytecodes || []).length,
+    fuelWallets: (data.fuelWallets || []).length,
+    taggedExploits: (data.taggedExploits || []).length,
+    domains: (data.domains || []).length
+  };
+}
 
 app.get('/api/trace', async (req, res) => {
   const seed = (req.query.seed || '').trim();

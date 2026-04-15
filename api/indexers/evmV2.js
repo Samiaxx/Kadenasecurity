@@ -50,7 +50,10 @@ function createEvmIndexer(config) {
   const mixers = parseList(config.mixers || '');
   const bridges = parseTaggedList(config.bridges || '');
   const contracts = parseList(config.contracts || '');
+  const cexEndpoints = parseList(config.cexEndpoints || '');
+  const drainerHashes = new Set((config.drainerBytecodes || []).map((h) => h.toLowerCase()));
   const enqueue = createRequestQueue(minIntervalMs);
+  const bytecodeCache = new Map(); // address -> {codeHash, fetched}
 
   function buildUrl(params) {
     const url = new URL(apiUrl);
@@ -103,6 +106,37 @@ function createEvmIndexer(config) {
     return hit ? hit.tag : null;
   }
 
+  async function getCodeHash(address) {
+    const key = address.toLowerCase();
+    if (bytecodeCache.has(key)) return bytecodeCache.get(key);
+    const url = buildUrl({
+      module: 'proxy',
+      action: 'eth_getCode',
+      address
+    });
+    const payload = await fetchJson(url);
+    const code = payload.result || '0x';
+    const crypto = require('crypto');
+    // sha3-256 is supported in Node; adequate for fingerprinting
+    const hash = crypto.createHash('sha3-256').update(code).digest('hex');
+    const record = { codeHash: hash };
+    bytecodeCache.set(key, record);
+    return record;
+  }
+
+  async function applyDrainerFlag(tx) {
+    if (!tx.to || tx.to === 'CONTRACT_CREATION') return tx;
+    try {
+      const codeInfo = await getCodeHash(tx.to);
+      if (codeInfo.codeHash && drainerHashes.has(codeInfo.codeHash.toLowerCase())) {
+        tx.flags = Array.from(new Set([...(tx.flags || []), 'drainer-bytecode']));
+      }
+    } catch (err) {
+      /* ignore bytecode fetch errors */
+    }
+    return tx;
+  }
+
   async function getBlockTimestamp(blockNumberHex) {
     if (!blockNumberHex) {
       return null;
@@ -147,7 +181,7 @@ function createEvmIndexer(config) {
       return null;
     }
     const timestamp = await getBlockTimestamp(tx.blockNumber);
-    return decorateTx(
+    return applyDrainerFlag(decorateTx(
       {
         hash: tx.hash,
         from: tx.from,
@@ -157,7 +191,7 @@ function createEvmIndexer(config) {
         timestamp: timestamp || new Date().toISOString()
       },
       tx.input
-    );
+    ));
   }
 
   async function getTransactionsByAddress(address) {
@@ -185,19 +219,24 @@ function createEvmIndexer(config) {
       throw new Error(payload.result || payload.message || 'Etherscan txlist error');
     }
     const list = Array.isArray(payload.result) ? payload.result : [];
-    return list.map((tx) =>
-      decorateTx(
-        {
-          hash: tx.hash,
-          from: tx.from,
-          to: tx.to || 'CONTRACT_CREATION',
-          amount: weiToEth(tx.value || '0'),
-          asset: symbol,
-          timestamp: new Date(Number(tx.timeStamp) * 1000).toISOString()
-        },
-        tx.input
-      )
+    const mapped = await Promise.all(
+      list.map(async (tx) => {
+        const base = decorateTx(
+          {
+            hash: tx.hash,
+            from: tx.from,
+            to: tx.to || 'CONTRACT_CREATION',
+            amount: weiToEth(tx.value || '0'),
+            asset: symbol,
+            timestamp: new Date(Number(tx.timeStamp) * 1000).toISOString(),
+            flags: []
+          },
+          tx.input
+        );
+        return applyDrainerFlag(base);
+      })
     );
+    return mapped;
   }
 
   function getBridgeEntries() {
@@ -213,7 +252,9 @@ function createEvmIndexer(config) {
     getBridgeEntries,
     mixers,
     bridges,
-    contracts
+    contracts,
+    cexEndpoints,
+    drainerHashes
   };
 }
 

@@ -1,5 +1,6 @@
 const { createEvmIndexer } = require('./evmV2');
 const { createBitcoinIndexer } = require('./bitcoin');
+const { getIndicators } = require('../indicators');
 
 const ETH_INDEXER = createEvmIndexer({
   chainId: process.env.ETH_CHAIN_ID || '1',
@@ -11,7 +12,9 @@ const ETH_INDEXER = createEvmIndexer({
   minIntervalMs: Number(process.env.ETHERSCAN_MIN_INTERVAL_MS || 350),
   mixers: process.env.ETH_MIXERS || '',
   bridges: process.env.ETH_BRIDGES || '',
-  contracts: process.env.ETH_CONTRACTS || ''
+  contracts: process.env.ETH_CONTRACTS || '',
+  cexEndpoints: process.env.ETH_CEX_ENDPOINTS || '',
+  drainerBytecodes: (getIndicators().drainerBytecodes || [])
 });
 
 const BSC_INDEXER =
@@ -27,7 +30,9 @@ const BSC_INDEXER =
         useV2: process.env.BSCSCAN_USE_V2 ? process.env.BSCSCAN_USE_V2 === 'true' : true,
         mixers: process.env.BSC_MIXERS || '',
         bridges: process.env.BSC_BRIDGES || '',
-        contracts: process.env.BSC_CONTRACTS || ''
+        contracts: process.env.BSC_CONTRACTS || '',
+        cexEndpoints: process.env.BSC_CEX_ENDPOINTS || '',
+        drainerBytecodes: (getIndicators().drainerBytecodes || [])
       })
     : null;
 
@@ -36,7 +41,8 @@ const BTC_INDEXER = createBitcoinIndexer({
   txLimit: Number(process.env.BTC_TX_LIMIT || 25),
   minIntervalMs: Number(process.env.BTC_MIN_INTERVAL_MS || 250),
   mixers: process.env.BTC_MIXERS || '',
-  bridges: process.env.BTC_BRIDGES || ''
+  bridges: process.env.BTC_BRIDGES || '',
+  cexEndpoints: process.env.BTC_CEX_ENDPOINTS || ''
 });
 
 const CHAIN_INDEXERS = {
@@ -50,10 +56,10 @@ function listChains() {
 }
 
 async function findTxByHash(hash) {
-  for (const indexer of Object.values(CHAIN_INDEXERS)) {
+  for (const [key, indexer] of Object.entries(CHAIN_INDEXERS)) {
     const result = await indexer.getTransactionByHash(hash).catch(() => null);
     if (result) {
-      return { chainId: indexer.chainId, txs: Array.isArray(result) ? result : [result] };
+      return { chainId: key, txs: Array.isArray(result) ? result : [result] };
     }
   }
   return null;
@@ -119,20 +125,21 @@ function getChainData(chainId) {
     symbol: indexer.symbol,
     mixers: indexer.mixers,
     bridges: indexer.bridges.map((entry) => entry.address || entry),
-    contracts: indexer.contracts || []
+    contracts: indexer.contracts || [],
+    cexEndpoints: indexer.cexEndpoints || []
   };
 }
 
 async function findBridgeTransactions(bridgeTag) {
   const matches = [];
-  for (const indexer of Object.values(CHAIN_INDEXERS)) {
+  for (const [key, indexer] of Object.entries(CHAIN_INDEXERS)) {
     const entry = indexer.getBridgeEntries().find((item) => item.tag === bridgeTag);
     if (!entry) {
       continue;
     }
     const txs = await indexer.getTransactionsByAddress(entry.address).catch(() => []);
     txs.forEach((tx) => {
-      matches.push({ chainId: indexer.chainId, tx });
+      matches.push({ chainId: key, tx });
     });
   }
   return matches;

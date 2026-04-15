@@ -1,0 +1,105 @@
+[2026-03-27T00:36:50.786Z][BNB Smart Chain] txlist error URL=https://api.etherscan.io/v2/api?chainid=56&module=account&action=txlist&address=0xF977814e90dA44bFA03b6295A0616a897441aceC&startblock=0&endblock=99999999&page=1&offset=25&sort=desc&apikey=VS2ETEZA31QMHI3JMN7ZCI9BS1JY755TUW
+{"status":"0","message":"NOTOK","result":"Free API access is not supported for this chain. Please upgrade your api plan for full chain coverage. https://etherscan.io/apis"}
+
+[2026-03-27T00:38:53.505Z][BNB Smart Chain] txlist error URL=https://api.etherscan.io/v2/api?chainid=56&module=account&action=txlist&address=0x28C6c06298d514Db089934071355E5743bf21d60&startblock=0&endblock=99999999&page=1&offset=25&sort=desc&apikey=VS2ETEZA31QMHI3JMN7ZCI9BS1JY755TUW
+{"status":"0","message":"NOTOK","result":"Free API access is not supported for this chain. Please upgrade your api plan for full chain coverage. https://etherscan.io/apis"}
+
+[2026-03-27T00:40:01.637Z][BNB Smart Chain] txlist error URL=https://api.etherscan.io/v2/api?chainid=56&module=account&action=txlist&address=0x28C6c06298d514Db089934071355E5743bf21d60&startblock=0&endblock=99999999&page=1&offset=25&sort=desc&apikey=VS2ETEZA31QMHI3JMN7ZCI9BS1JY755TUW
+{"status":"0","message":"NOTOK","result":"Free API access is not supported for this chain. Please upgrade your api plan for full chain coverage. https://etherscan.io/apis"}
+
+[2026-03-27T00:41:59.885Z][BNB Smart Chain] txlist error URL=https://api.etherscan.io/v2/api?chainid=56&module=account&action=txlist&address=0xb7DD27dAeD99bfA52C961280FaAaB6d7d7a2F12b&startblock=0&endblock=99999999&page=1&offset=25&sort=desc&apikey=VS2ETEZA31QMHI3JMN7ZCI9BS1JY755TUW
+{"status":"0","message":"NOTOK","result":"Free API access is not supported for this chain. Please upgrade your api plan for full chain coverage. https://etherscan.io/apis"}
+
+[2026-03-27T00:42:18.324Z][BNB Smart Chain] txlist error URL=https://api.etherscan.io/v2/api?chainid=56&module=account&action=txlist&address=0xb7DD27dAeD99bfA52C961280FaAaB6d7d7a2F12b&startblock=0&endblock=99999999&page=1&offset=25&sort=desc&apikey=VS2ETEZA31QMHI3JMN7ZCI9BS1JY755TUW
+{"status":"0","message":"NOTOK","result":"Free API access is not supported for this chain. Please upgrade your api plan for full chain coverage. https://etherscan.io/apis"}
+
+[2026-03-27T00:42:21.522Z][BNB Smart Chain] txlist error URL=https://api.etherscan.io/v2/api?chainid=56&module=account&action=txlist&address=0xb7DD27dAeD99bfA52C961280FaAaB6d7d7a2F12b&startblock=0&endblock=99999999&page=1&offset=25&sort=desc&apikey=VS2ETEZA31QMHI3JMN7ZCI9BS1JY755TUW
+{"status":"0","message":"NOTOK","result":"Free API access is not supported for this chain. Please upgrade your api plan for full chain coverage. https://etherscan.io/apis"}
+
+[2026-03-27T00:42:33.038Z][BNB Smart Chain] txlist error URL=https://api.etherscan.io/v2/api?chainid=56&module=account&action=txlist&address=0xb7DD27dAeD99bfA52C961280FaAaB6d7d7a2F12b&startblock=0&endblock=99999999&page=1&offset=25&sort=desc&apikey=VS2ETEZA31QMHI3JMN7ZCI9BS1JY755TUW
+{"status":"0","message":"NOTOK","result":"Free API access is not supported for this chain. Please upgrade your api plan for full chain coverage. https://etherscan.io/apis"}
+
+[2026-03-27T00:43:26.602Z][BNB Smart Chain] txlist error URL=https://api.etherscan.io/v2/api?chainid=56&module=account&action=txlist&address=0x503828976d22510aad0201ac7ec88293211d23da&startblock=0&endblock=99999999&page=1&offset=25&sort=desc&apikey=VS2ETEZA31QMHI3JMN7ZCI9BS1JY755TUW
+{"status":"0","message":"NOTOK","result":"Free API access is not supported for this chain. Please upgrade your api plan for full chain coverage. https://etherscan.io/apis"}
+
+[2026-03-27T00:43:34.876Z][BNB Smart Chain] txlist error URL=https://api.etherscan.io/v2/api?chainid=56&module=account&action=txlist&address=0x503828976d22510aad0201ac7ec88293211d23da&startblock=0&endblock=99999999&page=1&offset=25&sort=desc&apikey=VS2ETEZA31QMHI3JMN7ZCI9BS1JY755TUW
+{"status":"0","message":"NOTOK","result":"Free API access is not supported for this chain. Please upgrade your api plan for full chain coverage. https://etherscan.io/apis"}
+
+[2026-03-27T00:48:42.443Z][BNB Smart Chain] txlist error URL=https://api.bscscan.com/api?module=account&action=txlist&address=0xb7DD27dAeD99bfA52C961280FaAaB6d7d7a2F12b&startblock=0&endblock=99999999&page=1&offset=25&sort=desc&apikey=VS2ETEZA31QMHI3JMN7ZCI9BS1JY755TUW
+{"status":"0","message":"NOTOK","result":"You are using a deprecated V1 endpoint, switch to Etherscan API V2 using https://docs.etherscan.io/v2-migration"}
+
+[2026-03-27T00:49:18.358Z][BNB Smart Chain] txlist error URL=https://api.bscscan.com/api?module=account&action=txlist&address=0x503828976d22510aad0201ac7ec88293211d23da&startblock=0&endblock=99999999&page=1&offset=25&sort=desc&apikey=VS2ETEZA31QMHI3JMN7ZCI9BS1JY755TUW
+{"status":"0","message":"NOTOK","result":"You are using a deprecated V1 endpoint, switch to Etherscan API V2 using https://docs.etherscan.io/v2-migration"}
+
+[2026-03-27T00:50:16.762Z][BNB Smart Chain] txlist error URL=https://api.bscscan.com/api?module=account&action=txlist&address=0x503828976d22510aad0201ac7ec88293211d23da&startblock=0&endblock=99999999&page=1&offset=25&sort=desc&apikey=VS2ETEZA31QMHI3JMN7ZCI9BS1JY755TUW
+{"status":"0","message":"NOTOK","result":"You are using a deprecated V1 endpoint, switch to Etherscan API V2 using https://docs.etherscan.io/v2-migration"}
+
+[2026-03-27T00:53:55.404Z][BNB Smart Chain] txlist error URL=https://api.bscscan.com/api?module=account&action=txlist&address=0xb7DD27dAeD99bfA52C961280FaAaB6d7d7a2F12b&startblock=0&endblock=99999999&page=1&offset=25&sort=desc&apikey=VS2ETEZA31QMHI3JMN7ZCI9BS1JY755TUW
+{"status":"0","message":"NOTOK","result":"You are using a deprecated V1 endpoint, switch to Etherscan API V2 using https://docs.etherscan.io/v2-migration"}
+
+[2026-03-27T00:54:09.373Z][BNB Smart Chain] txlist error URL=https://api.bscscan.com/api?module=account&action=txlist&address=0xb7DD27dAeD99bfA52C961280FaAaB6d7d7a2F12b&startblock=0&endblock=99999999&page=1&offset=25&sort=desc&apikey=VS2ETEZA31QMHI3JMN7ZCI9BS1JY755TUW
+{"status":"0","message":"NOTOK","result":"You are using a deprecated V1 endpoint, switch to Etherscan API V2 using https://docs.etherscan.io/v2-migration"}
+
+[2026-03-27T00:55:50.042Z][BNB Smart Chain] txlist error URL=https://api.bscscan.com/api?module=account&action=txlist&address=0x4675C7e5BaAFBFFbca748158bEcBA61ef3b0a263&startblock=0&endblock=99999999&page=1&offset=25&sort=desc&apikey=VS2ETEZA31QMHI3JMN7ZCI9BS1JY755TUW
+{"status":"0","message":"NOTOK","result":"You are using a deprecated V1 endpoint, switch to Etherscan API V2 using https://docs.etherscan.io/v2-migration"}
+
+[2026-03-27T00:56:36.363Z][BNB Smart Chain] txlist error URL=https://api.bscscan.com/api?module=account&action=txlist&address=0x4675C7e5BaAFBFFbca748158bEcBA61ef3b0a263&startblock=0&endblock=99999999&page=1&offset=25&sort=desc&apikey=VS2ETEZA31QMHI3JMN7ZCI9BS1JY755TUW
+{"status":"0","message":"NOTOK","result":"You are using a deprecated V1 endpoint, switch to Etherscan API V2 using https://docs.etherscan.io/v2-migration"}
+
+[2026-03-27T01:45:50.492Z][BNB Smart Chain] txlist error URL=https://api.etherscan.io/v2/api?chainid=56&module=account&action=txlist&address=0x0000000000000000000000000000000000001000&startblock=0&endblock=99999999&page=1&offset=25&sort=desc&apikey=VS2ETEZA31QMHI3JMN7ZCI9BS1JY755TUW
+{"status":"0","message":"NOTOK","result":"Free API access is not supported for this chain. Please upgrade your api plan for full chain coverage. https://etherscan.io/apis"}
+
+[2026-03-27T01:55:43.457Z][BNB Smart Chain] txlist error URL=https://api.etherscan.io/v2/api?chainid=56&module=account&action=txlist&address=0x0000000000000000000000000000000000001000&startblock=0&endblock=99999999&page=1&offset=25&sort=desc&apikey=VS2ETEZA31QMHI3JMN7ZCI9BS1JY755TUW
+{"status":"0","message":"NOTOK","result":"Free API access is not supported for this chain. Please upgrade your api plan for full chain coverage. https://etherscan.io/apis"}
+
+[2026-03-27T02:07:58.305Z][BNB Smart Chain] txlist error URL=https://api.etherscan.io/v2/api?chainid=56&module=account&action=txlist&address=0x0000000000000000000000000000000000001000&startblock=0&endblock=99999999&page=1&offset=25&sort=desc&apikey=VS2ETEZA31QMHI3JMN7ZCI9BS1JY755TUW
+{"status":"0","message":"NOTOK","result":"Free API access is not supported for this chain. Please upgrade your api plan for full chain coverage. https://etherscan.io/apis"}
+
+[2026-03-27T02:08:33.174Z][BNB Smart Chain] txlist error URL=https://api.etherscan.io/v2/api?chainid=56&module=account&action=txlist&address=0x0000000000000000000000000000000000001000&startblock=0&endblock=99999999&page=1&offset=25&sort=desc&apikey=VS2ETEZA31QMHI3JMN7ZCI9BS1JY755TUW
+{"status":"0","message":"NOTOK","result":"Free API access is not supported for this chain. Please upgrade your api plan for full chain coverage. https://etherscan.io/apis"}
+
+[2026-03-27T02:11:14.058Z][BNB Smart Chain] txlist error URL=https://api.etherscan.io/v2/api?chainid=56&module=account&action=txlist&address=0x44ca8bb48FC589b907662897f4DD2389CE2CFb8f&startblock=0&endblock=99999999&page=1&offset=25&sort=desc&apikey=VS2ETEZA31QMHI3JMN7ZCI9BS1JY755TUW
+{"status":"0","message":"NOTOK","result":"Free API access is not supported for this chain. Please upgrade your api plan for full chain coverage. https://etherscan.io/apis"}
+
+[2026-03-27T02:12:16.398Z][BNB Smart Chain] txlist error URL=https://api.etherscan.io/v2/api?chainid=56&module=account&action=txlist&address=0x44ca8bb48FC589b907662897f4DD2389CE2CFb8f&startblock=0&endblock=99999999&page=1&offset=25&sort=desc&apikey=VS2ETEZA31QMHI3JMN7ZCI9BS1JY755TUW
+{"status":"0","message":"NOTOK","result":"Free API access is not supported for this chain. Please upgrade your api plan for full chain coverage. https://etherscan.io/apis"}
+
+[2026-03-27T02:12:27.420Z][BNB Smart Chain] txlist error URL=https://api.etherscan.io/v2/api?chainid=56&module=account&action=txlist&address=0x44ca8bb48FC589b907662897f4DD2389CE2CFb8f&startblock=0&endblock=99999999&page=1&offset=25&sort=desc&apikey=VS2ETEZA31QMHI3JMN7ZCI9BS1JY755TUW
+{"status":"0","message":"NOTOK","result":"Free API access is not supported for this chain. Please upgrade your api plan for full chain coverage. https://etherscan.io/apis"}
+
+[2026-03-27T02:12:44.168Z][BNB Smart Chain] txlist error URL=https://api.etherscan.io/v2/api?chainid=56&module=account&action=txlist&address=0x44ca8bb48FC589b907662897f4DD2389CE2CFb8f&startblock=0&endblock=99999999&page=1&offset=25&sort=desc&apikey=VS2ETEZA31QMHI3JMN7ZCI9BS1JY755TUW
+{"status":"0","message":"NOTOK","result":"Free API access is not supported for this chain. Please upgrade your api plan for full chain coverage. https://etherscan.io/apis"}
+
+[2026-03-27T02:12:45.078Z][BNB Smart Chain] txlist error URL=https://api.etherscan.io/v2/api?chainid=56&module=account&action=txlist&address=0x44ca8bb48FC589b907662897f4DD2389CE2CFb8f&startblock=0&endblock=99999999&page=1&offset=25&sort=desc&apikey=VS2ETEZA31QMHI3JMN7ZCI9BS1JY755TUW
+{"status":"0","message":"NOTOK","result":"Free API access is not supported for this chain. Please upgrade your api plan for full chain coverage. https://etherscan.io/apis"}
+
+[2026-03-27T02:12:50.742Z][BNB Smart Chain] txlist error URL=https://api.etherscan.io/v2/api?chainid=56&module=account&action=txlist&address=0x44ca8bb48FC589b907662897f4DD2389CE2CFb8f&startblock=0&endblock=99999999&page=1&offset=25&sort=desc&apikey=VS2ETEZA31QMHI3JMN7ZCI9BS1JY755TUW
+{"status":"0","message":"NOTOK","result":"Free API access is not supported for this chain. Please upgrade your api plan for full chain coverage. https://etherscan.io/apis"}
+
+[2026-03-27T02:22:45.904Z][BNB Smart Chain] txlist error URL=https://api.bscscan.com/api?module=account&action=txlist&address=0x44ca8bb48FC589b907662897f4DD2389CE2CFb8f&startblock=0&endblock=99999999&page=1&offset=25&sort=desc&apikey=VS2ETEZA31QMHI3JMN7ZCI9BS1JY755TUW
+{"status":"0","message":"NOTOK","result":"You are using a deprecated V1 endpoint, switch to Etherscan API V2 using https://docs.etherscan.io/v2-migration"}
+
+[2026-03-27T02:23:50.262Z][BNB Smart Chain] txlist error URL=https://api.bscscan.com/api?module=account&action=txlist&address=0x44ca8bb48FC589b907662897f4DD2389CE2CFb8f&startblock=0&endblock=99999999&page=1&offset=25&sort=desc&apikey=VS2ETEZA31QMHI3JMN7ZCI9BS1JY755TUW
+{"status":"0","message":"NOTOK","result":"You are using a deprecated V1 endpoint, switch to Etherscan API V2 using https://docs.etherscan.io/v2-migration"}
+
+[2026-03-28T21:30:53.004Z][BNB Smart Chain] txlist error URL=https://api.bscscan.com/api?module=account&action=txlist&address=0x9FC3da866e7DF3a1c57adE1a97c9f00a70f010c8&startblock=0&endblock=99999999&page=1&offset=25&sort=desc&apikey=VS2ETEZA31QMHI3JMN7ZCI9BS1JY755TUW
+{"status":"0","message":"NOTOK","result":"You are using a deprecated V1 endpoint, switch to Etherscan API V2 using https://docs.etherscan.io/v2-migration"}
+
+[2026-03-28T21:32:11.006Z][BNB Smart Chain] txlist error URL=https://api.bscscan.com/api?module=account&action=txlist&address=0x9FC3da866e7DF3a1c57adE1a97c9f00a70f010c8&startblock=0&endblock=99999999&page=1&offset=25&sort=desc&apikey=VS2ETEZA31QMHI3JMN7ZCI9BS1JY755TUW
+{"status":"0","message":"NOTOK","result":"You are using a deprecated V1 endpoint, switch to Etherscan API V2 using https://docs.etherscan.io/v2-migration"}
+
+[2026-03-28T21:32:35.895Z][BNB Smart Chain] txlist error URL=https://api.bscscan.com/api?module=account&action=txlist&address=0x9FC3da866e7DF3a1c57adE1a97c9f00a70f010c8&startblock=0&endblock=99999999&page=1&offset=25&sort=desc&apikey=VS2ETEZA31QMHI3JMN7ZCI9BS1JY755TUW
+{"status":"0","message":"NOTOK","result":"You are using a deprecated V1 endpoint, switch to Etherscan API V2 using https://docs.etherscan.io/v2-migration"}
+
+[2026-03-28T21:36:21.852Z][BNB Smart Chain] txlist error URL=https://api.bscscan.com/api?module=account&action=txlist&address=0x9FC3da866e7DF3a1c57adE1a97c9f00a70f010c8&startblock=0&endblock=99999999&page=1&offset=25&sort=desc&apikey=VS2ETEZA31QMHI3JMN7ZCI9BS1JY755TUW
+{"status":"0","message":"NOTOK","result":"You are using a deprecated V1 endpoint, switch to Etherscan API V2 using https://docs.etherscan.io/v2-migration"}
+
+[2026-03-28T21:36:58.093Z][BNB Smart Chain] txlist error URL=https://api.bscscan.com/api?module=account&action=txlist&address=0x9FC3da866e7DF3a1c57adE1a97c9f00a70f010c8&startblock=0&endblock=99999999&page=1&offset=25&sort=desc&apikey=VS2ETEZA31QMHI3JMN7ZCI9BS1JY755TUW
+{"status":"0","message":"NOTOK","result":"You are using a deprecated V1 endpoint, switch to Etherscan API V2 using https://docs.etherscan.io/v2-migration"}
+
+[2026-03-28T21:44:28.893Z][BNB Smart Chain] txlist error URL=https://api.etherscan.io/v2/api?chainid=56&module=account&action=txlist&address=0x9FC3da866e7DF3a1c57adE1a97c9f00a70f010c8&startblock=0&endblock=99999999&page=1&offset=25&sort=desc&apikey=VS2ETEZA31QMHI3JMN7ZCI9BS1JY755TUW
+{"status":"0","message":"NOTOK","result":"Free API access is not supported for this chain. Please upgrade your api plan for full chain coverage. https://etherscan.io/apis"}
+
+[2026-04-15T22:55:34.337Z][BNB Smart Chain] txlist error URL=https://api.etherscan.io/v2/api?chainid=56&module=account&action=txlist&address=0x6f84ce2F474df6086AeFC2aBb2C346cFfC8820c0&startblock=0&endblock=99999999&page=1&offset=25&sort=desc&apikey=VS2ETEZA31QMHI3JMN7ZCI9BS1JY755TUW
+{"status":"0","message":"NOTOK","result":"Free API access is not supported for this chain. Please upgrade your api plan for full chain coverage. https://etherscan.io/apis"}
+

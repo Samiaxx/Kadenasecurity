@@ -25,7 +25,7 @@ async function buildGraph({ seed, depth = 2, maxNodes = 120 }) {
 
   const seedInfo = looksLikeTxHash(seed) ? await findTxByHash(seed) : null;
   if (seedInfo) {
-    const { chainId, txs } = seedInfo;
+    const { chainId, txs } = seedInfo; // chainId here is the chain key used in CHAIN_INDEXERS
     txs.forEach((tx) => {
       if (tx.from) {
         queue.push({ chainId, address: tx.from, depth: 0 });

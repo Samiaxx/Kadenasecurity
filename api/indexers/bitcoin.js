@@ -21,12 +21,21 @@ function createRequestQueue(minIntervalMs) {
   return enqueue;
 }
 
+function isValidBtcAddress(address) {
+  if (!address || typeof address !== 'string') return false;
+  const bech32 = /^(bc1|tb1)[0-9a-zA-Z]{11,71}$/;
+  const base58 = /^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$/;
+  return bech32.test(address) || base58.test(address);
+}
+
 function createBitcoinIndexer(config) {
   const apiUrl = config.apiUrl;
   const txLimit = config.txLimit;
   const minIntervalMs = config.minIntervalMs;
   const mixers = parseList(config.mixers || '');
   const bridges = parseTaggedList(config.bridges || '');
+   // centralized exchange hot wallets / deposit addresses
+  const cexEndpoints = parseList(config.cexEndpoints || '');
   const symbol = 'BTC';
   const name = 'Bitcoin';
   const enqueue = createRequestQueue(minIntervalMs);
@@ -100,6 +109,9 @@ function createBitcoinIndexer(config) {
   }
 
   async function getTransactionsByAddress(address) {
+    if (!isValidBtcAddress(address)) {
+      return [];
+    }
     const txs = await fetchJson(`/address/${address}/txs`);
     const limited = Array.isArray(txs) ? txs.slice(0, txLimit) : [];
     const edges = [];
@@ -122,7 +134,8 @@ function createBitcoinIndexer(config) {
     getBridgeEntries,
     mixers,
     bridges,
-    contracts: []
+    contracts: [],
+    cexEndpoints
   };
 }
 

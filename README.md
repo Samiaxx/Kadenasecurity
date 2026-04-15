@@ -4,7 +4,7 @@ This repository implements a hybrid fraud tracing system that combines off-chain
 
 ## What is included
 - Live multi-chain indexers (Ethereum via Etherscan V2, BNB Smart Chain via BscScan, Bitcoin via Blockstream Esplora).
-- Recursive transaction graph builder and risk heuristics engine (fan-out, bridge usage, mixer usage, rapid hops).
+- Recursive transaction graph builder and risk heuristics engine (fan-out, mixer/bridge use, rapid hops, peel-chain fan-outs, rapid cash-outs to bridges/mixers/CEX endpoints).
 - Interactive frontend graph visualization with color-coded risk paths.
 - API layer serving traces and fraud cases.
 - Pact smart contracts for fraud case registry, timestamped reports, wallet risk attestations, and public audit trail.
@@ -29,6 +29,7 @@ ETHERSCAN_API_URL=https://api.etherscan.io/v2/api
 ETH_CHAIN_ID=1
 ETHERSCAN_TX_LIMIT=25
 ETHERSCAN_MIN_INTERVAL_MS=350
+ETH_CEX_ENDPOINTS=comma_separated_cex_hotwallets
 
 BSCSCAN_API_KEY=your_bscscan_key_or_leave_blank_to_reuse_etherscan
 BSCSCAN_API_URL=https://api.bscscan.com/api
@@ -36,10 +37,12 @@ BSC_CHAIN_ID=56
 BSCSCAN_TX_LIMIT=25
 BSCSCAN_MIN_INTERVAL_MS=350
 BSCSCAN_USE_V2=false
+BSC_CEX_ENDPOINTS=comma_separated_cex_hotwallets_on_bsc
 
 BTC_API_URL=https://blockstream.info/api
 BTC_TX_LIMIT=25
 BTC_MIN_INTERVAL_MS=250
+BTC_CEX_ENDPOINTS=comma_separated_cex_hotwallets_on_bitcoin
 ```
 
 ## Deploy on Vercel (demo link)

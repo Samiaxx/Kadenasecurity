@@ -1,0 +1,21 @@
+{
+  "mixers": {
+    "ethereum": [],
+    "bsc": [],
+    "bitcoin": []
+  },
+  "bridges": {
+    "ethereum": [],
+    "bsc": [],
+    "bitcoin": []
+  },
+  "cexEndpoints": {
+    "ethereum": [],
+    "bsc": [],
+    "bitcoin": []
+  },
+  "drainerBytecodes": [],
+  "fuelWallets": [],
+  "taggedExploits": [],
+  "domains": []
+}
