@@ -1,5 +1,6 @@
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 loadEnv();
 
 const express = require('express');
@@ -7,6 +8,13 @@ const cors = require('cors');
 const { v4: uuidv4 } = require('uuid');
 const { buildGraph } = require('./graph/graphBuilder');
 const { getIndicators, reloadIndicators, INDICATOR_PATH } = require('./indicators');
+const {
+  getKadenaConfig,
+  pactInteger,
+  pactString,
+  pactStringList,
+  submitPactCode
+} = require('./kadena');
 
 const app = express();
 const CASES_PATH = path.join(__dirname, 'data', 'cases.json');
@@ -101,6 +109,7 @@ app.get('/api/health', (req, res) => {
       apiUrl: btcApiUrl
     }
   };
+  const kadena = getKadenaConfig();
 
   res.json({
     status: 'ok',
@@ -109,7 +118,8 @@ app.get('/api/health', (req, res) => {
       tracing: true,
       caseRegistration: true,
       attestations: true,
-      multiSeedTracing: true
+      multiSeedTracing: true,
+      kadenaAnchoring: kadena.signerConfigured
     },
     indicators: {
       path: INDICATOR_PATH,
@@ -117,6 +127,7 @@ app.get('/api/health', (req, res) => {
       totalCount: Object.values(indicatorCounts).reduce((sum, value) => sum + value, 0),
       hasAnyIndicators
     },
+    kadena,
     caseStorage: {
       mode: isServerless ? 'memory' : 'file',
       path: isServerless ? null : CASES_PATH
@@ -176,6 +187,29 @@ app.post('/api/case', async (req, res) => {
     const now = new Date().toISOString();
     const graph = await buildGraph({ seed, depth: payload.depth || 3 });
 
+    // Generate metadata hash
+    const metadata = JSON.stringify({
+      title: payload.title || 'Untitled Fraud Case',
+      seed,
+      chainSummary: graph.meta.chains,
+      createdAt: now
+    });
+    const metadataHash = crypto.createHash('sha256').update(metadata).digest('hex');
+
+    const networkId = payload.networkId || process.env.KADENA_NETWORK_ID || 'testnet04';
+    const chainId = payload.chainId || process.env.KADENA_CHAIN_ID || '1';
+    const reporter = payload.reporter || 'system'; // Default reporter
+
+    const pactCode = `(fraud-case-registry.register-case ${pactString(caseId)} ${pactString(
+      payload.title || 'Untitled Fraud Case'
+    )} ${pactString(seed)} ${pactString('multi-chain')} ${pactString(metadataHash)} ${pactString(reporter)})`;
+    const pactResult = await submitPactCode(pactCode, {
+      networkId,
+      chainId,
+      gasLimit: 12000
+    });
+    const kadenaConfig = getKadenaConfig({ networkId, chainId });
+
     const record = {
       id: caseId,
       title: payload.title || 'Untitled Fraud Case',
@@ -187,8 +221,13 @@ app.post('/api/case', async (req, res) => {
       pactAnchor: {
         module: 'fraud-case-registry',
         function: 'register-case',
-        networkId: payload.networkId || 'testnet04',
-        chainId: payload.chainId || '1'
+        networkId,
+        chainId,
+        apiHost: pactResult.apiHost || kadenaConfig.apiHost,
+        senderAccount: pactResult.senderAccount || kadenaConfig.senderAccount,
+        metadataHash,
+        pactCode,
+        pactResult
       }
     };
 
@@ -226,26 +265,64 @@ app.get('/api/cases', (req, res) => {
   })));
 });
 
-app.post('/api/attest', (req, res) => {
+app.post('/api/attest', async (req, res) => {
   const payload = req.body || {};
-  if (!payload.wallet || !payload.chain || !payload.riskScore) {
+  const riskScore = Math.round(Number(payload.riskScore));
+  if (!payload.wallet || !payload.chain || !Number.isFinite(riskScore)) {
     return res.status(400).json({ error: 'wallet, chain, and riskScore are required' });
   }
-  const attestation = {
-    id: `att-${uuidv4()}`,
-    wallet: payload.wallet,
-    chain: payload.chain,
-    riskScore: payload.riskScore,
-    flags: payload.flags || [],
-    createdAt: new Date().toISOString(),
-    pactAnchor: {
-      module: 'fraud-case-registry',
-      function: 'attest-wallet',
-      networkId: payload.networkId || 'testnet04',
-      chainId: payload.chainId || '1'
-    }
-  };
-  res.json(attestation);
+
+  try {
+    const attestId = `att-${uuidv4()}`;
+    const networkId = payload.networkId || process.env.KADENA_NETWORK_ID || 'testnet04';
+    const chainId = payload.chainId || process.env.KADENA_CHAIN_ID || '1';
+    const attestor = payload.attestor || 'system';
+
+    // Generate metadata hash for attestation
+    const metadata = JSON.stringify({
+      wallet: payload.wallet,
+      chain: payload.chain,
+      riskScore,
+      flags: payload.flags || [],
+      createdAt: new Date().toISOString()
+    });
+    const metadataHash = crypto.createHash('sha256').update(metadata).digest('hex');
+
+    const pactCode = `(fraud-case-registry.attest-wallet ${pactString(attestId)} ${pactString(
+      payload.wallet
+    )} ${pactString(payload.chain)} ${pactInteger(riskScore)} ${pactStringList(payload.flags || [])} ${pactString(
+      attestor
+    )})`;
+    const pactResult = await submitPactCode(pactCode, {
+      networkId,
+      chainId,
+      gasLimit: 12000
+    });
+    const kadenaConfig = getKadenaConfig({ networkId, chainId });
+
+    const attestation = {
+      id: attestId,
+      wallet: payload.wallet,
+      chain: payload.chain,
+      riskScore,
+      flags: payload.flags || [],
+      createdAt: new Date().toISOString(),
+      pactAnchor: {
+        module: 'fraud-case-registry',
+        function: 'attest-wallet',
+        networkId,
+        chainId,
+        apiHost: pactResult.apiHost || kadenaConfig.apiHost,
+        senderAccount: pactResult.senderAccount || kadenaConfig.senderAccount,
+        metadataHash,
+        pactCode,
+        pactResult
+      }
+    };
+    res.json(attestation);
+  } catch (error) {
+    res.status(500).json({ error: error.message || 'attestation creation failed' });
+  }
 });
 
 app.get('/', (req, res) => {

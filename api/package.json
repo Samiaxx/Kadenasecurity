@@ -8,6 +8,7 @@
     "start": "node server.js"
   },
   "dependencies": {
+    "@kadena/client": "^1.11.0",
     "cors": "^2.8.5",
     "express": "^4.19.2",
     "uuid": "^9.0.1"

@@ -121,6 +121,19 @@ function setStatus(element, message, state = 'info') {
   element.dataset.state = state;
 }
 
+function describePactResult(pactResult) {
+  if (!pactResult) {
+    return 'Kadena anchoring was not attempted.';
+  }
+  if (pactResult.status === 'submitted' && pactResult.requestKey) {
+    return `Kadena submitted with request key ${pactResult.requestKey}.`;
+  }
+  if (pactResult.message) {
+    return `Kadena ${pactResult.status || 'status'}: ${pactResult.message}`;
+  }
+  return `Kadena status: ${pactResult.status || 'unknown'}.`;
+}
+
 function getSeeds() {
   return seedInput.value
     .trim()
@@ -251,7 +264,11 @@ async function registerCase() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
-    setStatus(caseStatus, `Case registered. Shareable URL: ${result.shareUrl}`, 'success');
+    setStatus(
+      caseStatus,
+      `Case registered. ${describePactResult(result.pactAnchor?.pactResult)} Shareable URL: ${result.shareUrl}`,
+      'success'
+    );
     loadCases();
   } catch (error) {
     setStatus(caseStatus, `Case registration failed: ${error.message}`, 'error');
@@ -363,6 +380,18 @@ function renderSystemReadiness(health, errorMessage = '') {
     attention.push({
       title: 'Multi-chain tracing',
       detail: 'Only one chain is currently active, so bridge pivots may be underrepresented.'
+    });
+  }
+
+  if (health.kadena?.signerConfigured) {
+    working.push({
+      title: 'Kadena anchoring',
+      detail: `Ready on ${health.kadena.networkId} chain ${health.kadena.chainId} using ${health.kadena.senderAccount || 'the configured gas payer'}.`
+    });
+  } else {
+    attention.push({
+      title: 'Kadena anchoring',
+      detail: health.kadena?.reason || 'Kadena signing keys are not configured, so case anchors stay off-chain.'
     });
   }
 
@@ -486,11 +515,17 @@ function renderAttestations(graph) {
     item.appendChild(flagsRow);
 
     if (receipt) {
+      const statusClass = receipt.pactAnchor.pactResult && receipt.pactAnchor.pactResult.status === 'submitted' ? 'success' : 'error';
+      const statusText = receipt.pactAnchor.pactResult ? receipt.pactAnchor.pactResult.status : 'unknown';
+      const requestKey = receipt.pactAnchor.pactResult?.requestKey;
+      const message = receipt.pactAnchor.pactResult?.message;
       const receiptBlock = document.createElement('div');
       receiptBlock.className = 'status-detail';
       receiptBlock.innerHTML = `Receipt ${escapeHtml(receipt.id)} | ${escapeHtml(receipt.pactAnchor.module)}.${escapeHtml(
         receipt.pactAnchor.function
-      )} | ${escapeHtml(receipt.pactAnchor.networkId)} / chain ${escapeHtml(receipt.pactAnchor.chainId)}`;
+      )} | ${escapeHtml(receipt.pactAnchor.networkId)} / chain ${escapeHtml(receipt.pactAnchor.chainId)} | <span class="tag ${statusClass}">${statusText}</span>${
+        requestKey ? `<br />Request key: ${escapeHtml(requestKey)}` : ''
+      }${message ? `<br />${escapeHtml(message)}` : ''}`;
       item.appendChild(receiptBlock);
     }
 
@@ -515,7 +550,9 @@ async function createAttestation(node, flags) {
     renderAttestations(latestFilteredGraph || { nodes: [], edges: [] });
     setStatus(
       attestationStatus,
-      `Receipt ready: ${receipt.id} on ${receipt.pactAnchor.networkId} chain ${receipt.pactAnchor.chainId}.`,
+      `Receipt ready: ${receipt.id} on ${receipt.pactAnchor.networkId} chain ${receipt.pactAnchor.chainId}. ${describePactResult(
+        receipt.pactAnchor.pactResult
+      )}`,
       'success'
     );
   } catch (error) {

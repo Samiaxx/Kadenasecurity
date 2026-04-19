@@ -43,7 +43,38 @@ BTC_API_URL=https://blockstream.info/api
 BTC_TX_LIMIT=25
 BTC_MIN_INTERVAL_MS=250
 BTC_CEX_ENDPOINTS=comma_separated_cex_hotwallets_on_bitcoin
+
+# Kadena configuration (optional, for real blockchain anchoring)
+KADENA_PUBLIC_KEY=your_kadena_public_key
+KADENA_PRIVATE_KEY=your_kadena_private_key
+# Optional. Defaults to k:<KADENA_PUBLIC_KEY>
+KADENA_SENDER_ACCOUNT=your_kadena_account_name
+# Optional. Only needed when your RPC provider requires an API key header.
+KADENA_TESTNET_API_KEY=your_provider_api_key
+KADENA_API_KEY_HEADER=x-api-key
+# Optional. Defaults to the public Kadena testnet endpoint.
+KADENA_API_HOST=https://api.testnet.chainweb.com
+KADENA_NETWORK_ID=testnet04
+KADENA_CHAIN_ID=1
 ```
+
+## Kadena Pact Contract Deployment
+To enable real blockchain anchoring of fraud cases and attestations:
+
+1. Set up a funded Kadena account with some test KDA on testnet.
+2. Add your `KADENA_PUBLIC_KEY` and `KADENA_PRIVATE_KEY` to `api/.env`.
+3. If your RPC provider also requires an API key, add `KADENA_TESTNET_API_KEY` and, if necessary, `KADENA_API_KEY_HEADER`.
+4. If you do not set `KADENA_SENDER_ACCOUNT`, the app will default to `k:<KADENA_PUBLIC_KEY>`.
+5. Deploy the contract:
+```bash
+node scripts/deployContract.js
+```
+6. The API will now submit real transactions when registering cases and creating attestations.
+
+Important:
+- A testnet API key by itself does not sign Pact transactions. Real Kadena anchoring still requires `KADENA_PUBLIC_KEY` and `KADENA_PRIVATE_KEY`.
+- The dashboard now reports whether Kadena anchoring was submitted, skipped because keys are missing, or rejected during preflight.
+- If no Kadena signing keys are provided, the system still works for local development, but it stores the case off-chain only.
 
 ## Deploy on Vercel (demo link)
 This repo includes a `vercel.json` that deploys the Express API as a serverless function and the static frontend from `frontend/`.

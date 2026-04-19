@@ -2,6 +2,15 @@ const chainSummary = document.getElementById('chainSummary');
 
 let graphView = null;
 
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
 function riskColor(score) {
   if (score >= 75) return '#ff5c5c';
   if (score >= 50) return '#ffcd57';
@@ -188,11 +197,29 @@ async function loadCase() {
   document.getElementById('caseNotes').textContent = record.notes || 'No notes.';
 
   const anchor = document.getElementById('caseAnchor');
+  const resultStatus = record.pactAnchor.pactResult
+    ? `<div class="tag ${record.pactAnchor.pactResult.status === 'submitted' ? 'success' : 'error'}">Status: ${escapeHtml(
+        record.pactAnchor.pactResult.status
+      )}</div>`
+    : '';
+  const requestKey = record.pactAnchor.pactResult?.requestKey
+    ? `<div class="tag">Request Key: ${escapeHtml(record.pactAnchor.pactResult.requestKey)}</div>`
+    : '';
+  const resultMessage = record.pactAnchor.pactResult?.message
+    ? `<div class="tag warning">Message: ${escapeHtml(record.pactAnchor.pactResult.message)}</div>`
+    : '';
+  const senderAccount = record.pactAnchor.senderAccount
+    ? `<div class="tag">Sender: ${escapeHtml(record.pactAnchor.senderAccount)}</div>`
+    : '';
   anchor.innerHTML = `
-    <div class="tag">Module: ${record.pactAnchor.module}</div>
-    <div class="tag warning">Function: ${record.pactAnchor.function}</div>
-    <div class="tag">Network: ${record.pactAnchor.networkId}</div>
-    <div class="tag">Chain: ${record.pactAnchor.chainId}</div>
+    <div class="tag">Module: ${escapeHtml(record.pactAnchor.module)}</div>
+    <div class="tag warning">Function: ${escapeHtml(record.pactAnchor.function)}</div>
+    <div class="tag">Network: ${escapeHtml(record.pactAnchor.networkId)}</div>
+    <div class="tag">Chain: ${escapeHtml(record.pactAnchor.chainId)}</div>
+    ${senderAccount}
+    ${resultStatus}
+    ${requestKey}
+    ${resultMessage}
   `;
 
   renderGraph(record.graphSnapshot);
