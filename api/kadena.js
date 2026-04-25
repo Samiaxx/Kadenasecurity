@@ -1,10 +1,16 @@
-const { Pact, createClient, createSignWithKeypair } = require('@kadena/client');
+const {
+  Pact,
+  createClient,
+  createSignWithChainweaver,
+  createSignWithKeypair
+} = require('@kadena/client');
 
 const DEFAULT_NETWORK_ID = 'testnet04';
 const DEFAULT_CHAIN_ID = '1';
 const DEFAULT_GAS_LIMIT = 10000;
 const DEFAULT_GAS_PRICE = 0.00000001;
 const DEFAULT_TTL = 900;
+const DEFAULT_SIGNING_API_HOST = 'http://127.0.0.1:9467';
 
 function clean(value) {
   return String(value || '').trim();
@@ -55,39 +61,61 @@ function getApiKeyConfig() {
   };
 }
 
+function getSigningApiHost() {
+  return clean(process.env.KADENA_SIGNING_API_HOST || process.env.CHAINWEAVER_SIGNING_HOST) || DEFAULT_SIGNING_API_HOST;
+}
+
+function getRequestedSigningMode() {
+  const mode = clean(process.env.KADENA_SIGNING_MODE || process.env.KADENA_SIGNER || '').toLowerCase();
+  if (['chainweaver', 'wallet', 'signing-api'].includes(mode)) {
+    return 'chainweaver';
+  }
+  if (['keypair', 'private-key', 'privatekey'].includes(mode)) {
+    return 'keypair';
+  }
+  return '';
+}
+
 function getSignerConfig() {
   const publicKey = cleanHex(process.env.KADENA_PUBLIC_KEY);
   const privateKey = cleanHex(process.env.KADENA_PRIVATE_KEY);
   const apiKeyConfig = getApiKeyConfig();
-
-  if (!publicKey && !privateKey) {
-    return {
-      configured: false,
-      publicKey: null,
-      privateKey: null,
-      reason: apiKeyConfig.configured
-        ? 'KADENA_TESTNET_API_KEY is configured, but Kadena still needs KADENA_PUBLIC_KEY and KADENA_PRIVATE_KEY to sign a Pact transaction.'
-        : 'Kadena signing keys are missing. Set KADENA_PUBLIC_KEY and KADENA_PRIVATE_KEY to enable on-chain anchoring.'
-    };
-  }
+  const requestedMode = getRequestedSigningMode();
+  const signingMode = requestedMode || (privateKey ? 'keypair' : 'chainweaver');
+  const signingApiHost = getSigningApiHost();
 
   if (!publicKey) {
     return {
       configured: false,
       publicKey: null,
-      privateKey: null,
-      reason: 'KADENA_PUBLIC_KEY is missing. The transaction cannot be signed without the account public key.'
+      privateKey: privateKey || null,
+      signingMode,
+      signingApiHost: signingMode === 'chainweaver' ? signingApiHost : null,
+      reason: apiKeyConfig.configured
+        ? 'KADENA_TESTNET_API_KEY is configured, but Kadena still needs KADENA_PUBLIC_KEY so the wallet can sign the Pact transaction.'
+        : 'KADENA_PUBLIC_KEY is missing. Set it to the funded Kadena account public key used for gas signing.'
     };
   }
 
-  if (!privateKey) {
+  if (signingMode === 'keypair' && !privateKey) {
     return {
       configured: false,
       publicKey,
       privateKey: null,
-      reason: apiKeyConfig.configured
-        ? 'KADENA_PRIVATE_KEY is missing. A testnet API key can authenticate the HTTP request, but it cannot sign the Pact transaction.'
-        : 'KADENA_PRIVATE_KEY is missing. Add the private key for the funded Kadena account that pays gas.'
+      signingMode,
+      signingApiHost: null,
+      reason: 'KADENA_SIGNING_MODE is set to keypair, but KADENA_PRIVATE_KEY is missing.'
+    };
+  }
+
+  if (signingMode === 'chainweaver') {
+    return {
+      configured: true,
+      publicKey,
+      privateKey: null,
+      signingMode,
+      signingApiHost,
+      reason: ''
     };
   }
 
@@ -95,6 +123,8 @@ function getSignerConfig() {
     configured: true,
     publicKey,
     privateKey,
+    signingMode: 'keypair',
+    signingApiHost: null,
     reason: ''
   };
 }
@@ -122,6 +152,8 @@ function getKadenaConfig(options = {}) {
     senderAccount,
     publicKey: publicKey || null,
     signerConfigured: signerConfig.configured,
+    signingMode: signerConfig.signingMode,
+    signingApiHost: signerConfig.signingMode === 'chainweaver' ? signerConfig.signingApiHost : null,
     apiKeyConfigured: apiKeyConfig.configured,
     apiKeyHeader: apiKeyConfig.configured ? apiKeyConfig.headerName : null,
     reason: signerConfig.configured ? '' : signerConfig.reason
@@ -172,6 +204,17 @@ function buildUnsignedTransaction(pactCode, options = {}) {
   return builder.createTransaction();
 }
 
+function createTransactionSigner(config) {
+  if (config.signingMode === 'chainweaver') {
+    return createSignWithChainweaver({ host: config.signingApiHost || DEFAULT_SIGNING_API_HOST });
+  }
+
+  return createSignWithKeypair({
+    publicKey: config.publicKey,
+    secretKey: getSignerConfig().privateKey
+  });
+}
+
 function formatPactError(error) {
   if (!error) {
     return 'Unknown Pact error';
@@ -199,6 +242,14 @@ function formatPactError(error) {
   }
 }
 
+function formatSigningFailure(error, config) {
+  const message = error && error.message ? error.message : String(error || 'Kadena transaction failed');
+  if (config.signingMode === 'chainweaver' && /ECONNREFUSED|fetch failed|Failed to fetch|9467|quicksign/i.test(message)) {
+    return `Chainweaver signing API is not reachable at ${config.signingApiHost || DEFAULT_SIGNING_API_HOST}. Open Chainweaver Desktop, unlock the wallet, and enable the local signing API on port 9467.`;
+  }
+  return message || 'Kadena transaction failed';
+}
+
 function extractResult(payload) {
   if (payload && payload.result) {
     return payload.result;
@@ -215,17 +266,16 @@ async function submitPactCode(pactCode, options = {}) {
       networkId: config.networkId,
       chainId: config.chainId,
       apiHost: config.apiHost,
-      senderAccount: config.senderAccount
+      senderAccount: config.senderAccount,
+      signingMode: config.signingMode,
+      signingApiHost: config.signingApiHost
     };
   }
 
   try {
     const unsignedTransaction = buildUnsignedTransaction(pactCode, options);
-    const signWithKeypair = createSignWithKeypair({
-      publicKey: config.publicKey,
-      secretKey: getSignerConfig().privateKey
-    });
-    const signedTransaction = await signWithKeypair(unsignedTransaction);
+    const signTransaction = createTransactionSigner(config);
+    const signedTransaction = await signTransaction(unsignedTransaction);
     const client = createKadenaClient();
     const preflightResponse = await client.preflight(signedTransaction);
     const preflightResult = extractResult(preflightResponse);
@@ -238,6 +288,8 @@ async function submitPactCode(pactCode, options = {}) {
         chainId: config.chainId,
         apiHost: config.apiHost,
         senderAccount: config.senderAccount,
+        signingMode: config.signingMode,
+        signingApiHost: config.signingApiHost,
         preflight: preflightResult
       };
     }
@@ -250,16 +302,20 @@ async function submitPactCode(pactCode, options = {}) {
       chainId: descriptor.chainId,
       apiHost: config.apiHost,
       senderAccount: config.senderAccount,
+      signingMode: config.signingMode,
+      signingApiHost: config.signingApiHost,
       preflight: preflightResult || { status: 'success' }
     };
   } catch (error) {
     return {
       status: 'error',
-      message: error.message || 'Kadena transaction failed',
+      message: formatSigningFailure(error, config),
       networkId: config.networkId,
       chainId: config.chainId,
       apiHost: config.apiHost,
-      senderAccount: config.senderAccount
+      senderAccount: config.senderAccount,
+      signingMode: config.signingMode,
+      signingApiHost: config.signingApiHost
     };
   }
 }
@@ -293,6 +349,7 @@ function pactInteger(value) {
 module.exports = {
   DEFAULT_NETWORK_ID,
   DEFAULT_CHAIN_ID,
+  DEFAULT_SIGNING_API_HOST,
   buildUnsignedTransaction,
   createKadenaClient,
   formatPactError,

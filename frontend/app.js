@@ -134,6 +134,40 @@ function describePactResult(pactResult) {
   return `Kadena status: ${pactResult.status || 'unknown'}.`;
 }
 
+function looksLikeEvmAddress(value) {
+  return /^0x[a-fA-F0-9]{40}$/.test(String(value || '').trim());
+}
+
+function looksLikeBitcoinAddress(value) {
+  const seed = String(value || '').trim();
+  const bech32 = /^(bc1|tb1)[0-9a-zA-Z]{11,71}$/;
+  const base58 = /^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$/;
+  return bech32.test(seed) || base58.test(seed);
+}
+
+function getLocalTraceReadinessError(seeds) {
+  if (!latestHealth || !Array.isArray(seeds) || seeds.length === 0) {
+    return '';
+  }
+
+  const needsEvm = seeds.some((seed) => looksLikeEvmAddress(seed));
+  const needsBitcoin = seeds.some((seed) => looksLikeBitcoinAddress(seed));
+
+  if (needsEvm) {
+    const ethConfigured = Boolean(latestHealth.chains?.ethereum?.configured);
+    const bscConfigured = Boolean(latestHealth.chains?.bsc?.configured);
+    if (!ethConfigured && !bscConfigured) {
+      return 'Ethereum-style address detected, but Ethereum tracing is not configured. Add ETHERSCAN_API_KEY in api/.env and reload the page.';
+    }
+  }
+
+  if (needsBitcoin && !latestHealth.chains?.bitcoin?.enabled) {
+    return 'Bitcoin tracing is currently unavailable.';
+  }
+
+  return '';
+}
+
 function getSeeds() {
   return seedInput.value
     .trim()
@@ -179,6 +213,13 @@ async function trace() {
     return;
   }
 
+  const readinessError = getLocalTraceReadinessError(seeds);
+  if (readinessError) {
+    setStatus(caseStatus, readinessError, 'error');
+    traceMeta.textContent = 'Tracing is blocked until the required chain provider is configured.';
+    return;
+  }
+
   const depth = depthInput.value;
   traceBtn.disabled = true;
   registerBtn.disabled = true;
@@ -220,11 +261,19 @@ async function trace() {
     merged.meta.chains = latestHealth?.chains || {};
     latestGraph = merged;
     refreshTraceView();
-    setStatus(
-      caseStatus,
-      `Trace complete. ${latestFilteredGraph.nodes.length} nodes, ${latestFilteredGraph.edges.length} edges.`,
-      'success'
-    );
+    if (!merged.edges.length) {
+      setStatus(
+        caseStatus,
+        `Trace completed, but no transactions were found for the selected seed on the configured chain providers.`,
+        'info'
+      );
+    } else {
+      setStatus(
+        caseStatus,
+        `Trace complete. ${latestFilteredGraph.nodes.length} nodes, ${latestFilteredGraph.edges.length} edges.`,
+        'success'
+      );
+    }
     traceMeta.textContent = `Generated: ${new Date(merged.meta.generatedAt).toLocaleString()} | Seeds: ${seeds.length} | Depth: ${depth}`;
   } catch (error) {
     latestGraph = null;
@@ -384,9 +433,13 @@ function renderSystemReadiness(health, errorMessage = '') {
   }
 
   if (health.kadena?.signerConfigured) {
+    const signingMode =
+      health.kadena.signingMode === 'chainweaver'
+        ? `Chainweaver at ${health.kadena.signingApiHost || 'the local signing API'}`
+        : 'private keypair signing';
     working.push({
       title: 'Kadena anchoring',
-      detail: `Ready on ${health.kadena.networkId} chain ${health.kadena.chainId} using ${health.kadena.senderAccount || 'the configured gas payer'}.`
+      detail: `Ready on ${health.kadena.networkId} chain ${health.kadena.chainId} using ${health.kadena.senderAccount || 'the configured gas payer'} with ${signingMode}.`
     });
   } else {
     attention.push({
@@ -595,7 +648,10 @@ function applyFilters() {
     nodeIds.add(getEdgeEndpointId(edge, 'target'));
   });
 
-  const nodes = latestGraph.nodes.filter((node) => nodeIds.has(node.id));
+  const nodes =
+    edges.length === 0
+      ? latestGraph.nodes.slice()
+      : latestGraph.nodes.filter((node) => nodeIds.has(node.id));
 
   return {
     nodes,
@@ -881,7 +937,7 @@ function renderGraph(graph) {
     );
 
   const showAllLabels = Boolean(showLabelsInput?.checked);
-  const labelData = showAllLabels ? graph.nodes : graph.nodes.filter((n) => n.riskScore >= 50);
+  const labelData = showAllLabels || graph.edges.length === 0 ? graph.nodes : graph.nodes.filter((n) => n.riskScore >= 50);
 
   const label = zoomGroup
     .append('g')

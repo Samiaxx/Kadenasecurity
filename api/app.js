@@ -6,7 +6,8 @@ loadEnv();
 const express = require('express');
 const cors = require('cors');
 const { v4: uuidv4 } = require('uuid');
-const { buildGraph } = require('./graph/graphBuilder');
+const { listChains } = require('./indexers');
+const { buildGraph, looksLikeBitcoinAddress, looksLikeEvmAddress } = require('./graph/graphBuilder');
 const { getIndicators, reloadIndicators, INDICATOR_PATH } = require('./indicators');
 const {
   getKadenaConfig,
@@ -160,6 +161,36 @@ function summaryCounts(data) {
   };
 }
 
+function getTraceChainsForSeed(seed) {
+  const allChains = listChains();
+  const ethConfigured = Boolean((process.env.ETHERSCAN_API_KEY || '').trim());
+  const bscConfigured = Boolean((process.env.BSCSCAN_API_KEY || '').trim());
+
+  if (looksLikeEvmAddress(seed)) {
+    const chains = [];
+    if (ethConfigured && allChains.includes('ethereum')) {
+      chains.push('ethereum');
+    }
+    if (bscConfigured && allChains.includes('bsc')) {
+      chains.push('bsc');
+    }
+    if (chains.length === 0) {
+      return {
+        chains: [],
+        error:
+          'Ethereum-style address detected, but no EVM trace provider is configured. Set ETHERSCAN_API_KEY to trace Ethereum addresses.'
+      };
+    }
+    return { chains };
+  }
+
+  if (looksLikeBitcoinAddress(seed)) {
+    return { chains: allChains.filter((chainId) => chainId === 'bitcoin') };
+  }
+
+  return { chains: allChains };
+}
+
 app.get('/api/trace', async (req, res) => {
   const seed = (req.query.seed || '').trim();
   const depth = Number(req.query.depth || 2);
@@ -167,7 +198,11 @@ app.get('/api/trace', async (req, res) => {
     return res.status(400).json({ error: 'seed is required' });
   }
   try {
-    const graph = await buildGraph({ seed, depth });
+    const traceSelection = getTraceChainsForSeed(seed);
+    if (traceSelection.error) {
+      return res.status(400).json({ error: traceSelection.error });
+    }
+    const graph = await buildGraph({ seed, depth, chains: traceSelection.chains });
     res.json(graph);
   } catch (error) {
     res.status(500).json({ error: error.message || 'trace failed' });

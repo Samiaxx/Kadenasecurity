@@ -211,12 +211,16 @@ async function loadCase() {
   const senderAccount = record.pactAnchor.senderAccount
     ? `<div class="tag">Sender: ${escapeHtml(record.pactAnchor.senderAccount)}</div>`
     : '';
+  const signingMode = record.pactAnchor.pactResult?.signingMode
+    ? `<div class="tag">Signer: ${escapeHtml(record.pactAnchor.pactResult.signingMode)}</div>`
+    : '';
   anchor.innerHTML = `
     <div class="tag">Module: ${escapeHtml(record.pactAnchor.module)}</div>
     <div class="tag warning">Function: ${escapeHtml(record.pactAnchor.function)}</div>
     <div class="tag">Network: ${escapeHtml(record.pactAnchor.networkId)}</div>
     <div class="tag">Chain: ${escapeHtml(record.pactAnchor.chainId)}</div>
     ${senderAccount}
+    ${signingMode}
     ${resultStatus}
     ${requestKey}
     ${resultMessage}

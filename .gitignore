@@ -3,6 +3,7 @@ node_modules/
 
 # logs
 npm-debug.log*
+api/*.log
 
 # runtime
 api/data/cases.json

@@ -15,8 +15,36 @@ function looksLikeTxHash(seed) {
   return isHex64 || isHexPrefixed;
 }
 
-async function buildGraph({ seed, depth = 2, maxNodes = 120 }) {
+function looksLikeEvmAddress(seed) {
+  return /^0x[a-fA-F0-9]{40}$/.test(seed);
+}
+
+function looksLikeBitcoinAddress(seed) {
+  if (!seed || typeof seed !== 'string') {
+    return false;
+  }
+  const bech32 = /^(bc1|tb1)[0-9a-zA-Z]{11,71}$/;
+  const base58 = /^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$/;
+  return bech32.test(seed) || base58.test(seed);
+}
+
+function selectSeedChains(seed, preferredChains) {
+  if (Array.isArray(preferredChains) && preferredChains.length > 0) {
+    return preferredChains;
+  }
+
   const chains = listChains();
+  if (looksLikeEvmAddress(seed)) {
+    return chains.filter((chainId) => chainId === 'ethereum' || chainId === 'bsc');
+  }
+  if (looksLikeBitcoinAddress(seed)) {
+    return chains.filter((chainId) => chainId === 'bitcoin');
+  }
+  return chains;
+}
+
+async function buildGraph({ seed, depth = 2, maxNodes = 120, chains: preferredChains }) {
+  const chains = selectSeedChains(seed, preferredChains);
   const nodes = new Map();
   const edges = [];
   const edgeSet = new Set();
@@ -181,5 +209,8 @@ function addEdge(edges, edgeSet, edge) {
 }
 
 module.exports = {
-  buildGraph
+  buildGraph,
+  looksLikeBitcoinAddress,
+  looksLikeEvmAddress,
+  looksLikeTxHash
 };
